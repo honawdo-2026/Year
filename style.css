@@ -1,0 +1,212 @@
+/* 공통 변수 및 초기화 */
+:root {
+    --primary: #ff6b6b;
+    --secondary: #6a057e;
+    --bg-grade: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    --glass: rgba(255, 255, 255, 0.96);
+}
+
+body {
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: var(--bg-grade);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    color: #333;
+}
+
+/* 컨테이너 공통 */
+.glass-container {
+    background: var(--glass);
+    width: 92%;
+    max-width: 450px;
+    margin: 20px 0;
+    border-radius: 30px;
+    padding: 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    display: none; /* 기본 숨김 */
+    align-self: flex-start;
+    box-sizing: border-box;
+}
+
+.glass-container.active {
+    display: block;
+    animation: zoomIn 0.3s ease-out;
+}
+
+/* 제목 및 텍스트 */
+.main-title, .admin-title {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.input-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+/* 입력창 및 버튼 */
+input, select {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 15px;
+    border: 1.5px solid #eee;
+    font-size: 1rem;
+    box-sizing: border-box;
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--primary);
+}
+
+.primary-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 18px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+}
+
+.sub-btn {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 15px;
+    background: #95a5a6;
+    color: white;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 월 선택 (버튼 그리드) */
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.m-btn {
+    padding: 12px 0;
+    border-radius: 12px;
+    border: 1.5px solid #eee;
+    background: #fff;
+    font-weight: bold;
+    color: #777;
+}
+
+.m-btn.selected {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* 상단 스크롤 월 바 (사용자용) */
+.month-scroll-bar {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 10px 0;
+    margin-bottom: 15px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.month-btn {
+    flex: 0 0 auto;
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 2px solid #ffb6c1;
+    background: white;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.month-btn.active-month {
+    background: var(--primary);
+    color: white;
+}
+
+/* 이미지 가이드 및 미리보기 */
+.guide-box {
+    background: #fff4f4;
+    border-left: 5px solid var(--primary);
+    padding: 12px;
+    font-size: 0.85rem;
+    color: #555;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.mobile-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.preview-item { position: relative; }
+.preview-item img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 3px solid transparent;
+}
+
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--secondary);
+    color: white;
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: none;
+}
+
+/* 퀴즈 및 사진 뷰어 */
+.photo-view, .quiz-img {
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.mobile-info {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 10px;
+}
+
+.opt-btn {
+    width: 100%;
+    padding: 15px;
+    margin: 8px 0;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    background: #fdfdfd;
+    font-size: 1rem;
+    text-align: left;
+}
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
