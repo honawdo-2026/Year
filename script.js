@@ -57,12 +57,12 @@ function createAdminMonthButtons() {
         const btn = document.createElement('button');
         btn.className = "m-btn"; 
         btn.innerText = `${i}월`;
-        btn.style.cursor = "pointer"; // 마우스 커서 손가락 모양
+        btn.style.cursor = "pointer";
         btn.onclick = () => {
             document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             document.getElementById('selectedMonth').value = i;
-            resetAdminInputs(); // 월 선택 시 입력창 초기화 [아빠 요청 반영]
+            resetAdminInputs(); // 월 선택 시 입력창 초기화
         };
         grid.appendChild(btn);
     }
@@ -144,7 +144,7 @@ async function startApp() {
         localStorage.setItem('currentFamily', f);
         document.getElementById('startScreen').classList.remove('active');
         document.getElementById('mainScreen').classList.add('active');
-        // 제목에서 "네" 제거 [아빠 요청 반영]
+        // 제목에서 "네" 제거
         document.getElementById('welcomeMsg').innerText = `🏠 ${f} 추억 여행`;
 
         const bar = document.getElementById('userMonthBar');
@@ -157,7 +157,7 @@ async function startApp() {
             const btn = document.createElement('button');
             btn.className = "month-btn"; 
             btn.innerText = `${data.month}월`;
-            btn.style.cursor = "pointer"; // 마우스 커서 손가락 모양 [아빠 요청 반영]
+            btn.style.cursor = "pointer"; 
             btn.onclick = () => {
                 document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active-month'));
                 btn.classList.add('active-month');
@@ -176,7 +176,7 @@ function showContent() {
         viewer.innerHTML = `<img src="${currentData.photos[step]}" class="photo-view" onclick="window.nextStep()" style="width:100%; border-radius:15px; cursor:pointer;">`;
         info.innerText = `📷 사진 ${step + 1} / ${currentData.photos.length - 1}`;
     } else {
-        // 퀴즈 레이아웃 수정: 문구 상단 이동 및 "Q" 표시 [아빠 요청 반영]
+        // 퀴즈 레이아웃 수정: 문구 상단 이동 및 "Q" 표시
         viewer.innerHTML = `
             <div style="text-align:center; margin-bottom:15px;">
                 <p style="font-weight:bold; color:var(--primary); margin-bottom:10px;">✨ 여기서 잠깐! 퀴즈 타임!</p>
@@ -190,6 +190,7 @@ function showContent() {
     }
 }
 
+// HTML 파일에서 함수를 직접 호출할 수 있도록 window 객체에 등록 [매우 중요]
 window.loginAdmin = loginAdmin;
 window.saveData = saveData;
 window.startApp = startApp;
