@@ -17,11 +17,11 @@ const storage = getStorage(app);
 
 let currentData = null;
 let step = 0;
-let photoDataUrls = []; // 현재 업로드 대기중인 데이터
+let photoDataUrls = []; 
 let selectedQuizPhotoIdx = null;
 
 /* =========================================
-   [관리자] 기능 (index.html)
+   [관리자] 기능 및 데이터 로드 (index.html)
    ========================================= */
 
 async function loginAdmin() {
@@ -62,18 +62,19 @@ function createAdminMonthButtons() {
             document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             document.getElementById('selectedMonth').value = i;
-            loadExistingData(i); // [핵심] 해당 월의 데이터를 불러옵니다.
+            // [중요] 해당 월의 데이터를 서버에서 가져옵니다.
+            loadExistingData(i);
         };
         grid.appendChild(btn);
     }
 }
 
-// [핵심 기능] 기존에 등록된 사진과 퀴즈를 불러와 화면에 표시
+// 기존 데이터를 불러와서 화면에 뿌려주는 함수
 async function loadExistingData(month) {
     const family = localStorage.getItem('editingFamily');
     const docRef = doc(db, "memories", `${family}_${month}`);
     
-    // 일단 입력창 초기화
+    // 일단 화면 초기화
     resetAdminInputs();
 
     try {
@@ -81,34 +82,33 @@ async function loadExistingData(month) {
         if (docSnap.exists()) {
             const data = docSnap.data();
             
-            // 1. 퀴즈 정보 입력
+            // 퀴즈 정보 복구
             document.getElementById('quizTitle').value = data.quiz || "";
             document.getElementById('quizAns').value = data.ans || "";
-            const optInputs = document.querySelectorAll('.opt');
+            const opts = document.querySelectorAll('.opt');
             if(data.opts) {
-                data.opts.forEach((val, idx) => { if(optInputs[idx]) optInputs[idx].value = val; });
+                data.opts.forEach((val, i) => { if(opts[i]) opts[i].value = val; });
             }
 
-            // 2. 사진 정보 표시
-            const container = document.getElementById('imagePreviewContainer');
+            // 사진 정보 복구
             photoDataUrls = data.photos || [];
-            selectedQuizPhotoIdx = photoDataUrls.length - 1; // 마지막 사진이 퀴즈 사진으로 저장됨
+            // 마지막 사진이 보통 퀴즈 사진으로 저장되므로 마지막 인덱스 지정
+            selectedQuizPhotoIdx = photoDataUrls.length - 1; 
 
+            const container = document.getElementById('imagePreviewContainer');
             photoDataUrls.forEach((url, index) => {
                 const div = document.createElement('div');
                 div.className = "preview-item";
-                const isQuizImg = (index === selectedQuizPhotoIdx);
+                const isQuiz = (index === selectedQuizPhotoIdx);
                 div.innerHTML = `
-                    <img src="${url}" id="prev_${index}" onclick="window.selectQuizPhoto(${index})" style="cursor:pointer; border-color: ${isQuizImg ? '#ff6b6b' : 'transparent'}">
-                    <span class="badge" id="badge_${index}" style="display: ${isQuizImg ? 'block' : 'none'}">퀴즈 사진</span>
+                    <img src="${url}" id="prev_${index}" onclick="window.selectQuizPhoto(${index})" 
+                         style="cursor:pointer; border: 3px solid ${isQuiz ? '#ff6b6b' : 'transparent'};">
+                    <span class="badge" id="badge_${index}" style="display: ${isQuiz ? 'block' : 'none'};">퀴즈 사진</span>
                 `;
                 container.appendChild(div);
             });
-            console.log(`${month}월 데이터를 성공적으로 불러왔습니다.`);
         }
-    } catch (e) {
-        console.error("데이터 로드 실패:", e);
-    }
+    } catch (e) { console.error("데이터 로드 중 오류:", e); }
 }
 
 function resetAdminInputs() {
@@ -133,8 +133,8 @@ async function saveData() {
     alert("추억을 저장 중입니다... ⏳");
     try {
         const finalUrls = [];
-        // 새로 선택된 사진(data_url)은 업로드하고, 기존 URL은 그대로 유지
         for (let i = 0; i < photoDataUrls.length; i++) {
+            // 이미 저장된 URL(http...)은 다시 업로드하지 않음
             if (photoDataUrls[i].startsWith('http')) {
                 finalUrls.push(photoDataUrls[i]);
             } else {
@@ -144,7 +144,7 @@ async function saveData() {
             }
         }
         
-        // 퀴즈 사진을 맨 뒤로 보내는 로직 유지
+        // 퀴즈 이미지를 마지막 순서로 재배치
         const quizImg = finalUrls[selectedQuizPhotoIdx];
         const otherPhotos = finalUrls.filter((_, i) => i !== selectedQuizPhotoIdx);
         const sortedPhotos = [...otherPhotos, quizImg];
@@ -153,7 +153,7 @@ async function saveData() {
             family: f, month: parseInt(m), photos: sortedPhotos, quiz: q, opts: opts, ans: ans
         });
         alert(`${m}월 저장 완료! 💾`);
-    } catch (e) { alert("저장 실패!"); console.error(e); }
+    } catch (e) { alert("저장 실패!"); }
 }
 
 /* =========================================
