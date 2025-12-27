@@ -17,7 +17,7 @@ const storage = getStorage(app);
 
 let currentData = null;
 let step = 0;
-let photoDataUrls = [];
+let photoDataUrls = []; // 현재 업로드 대기중인 데이터
 let selectedQuizPhotoIdx = null;
 
 /* =========================================
@@ -62,9 +62,52 @@ function createAdminMonthButtons() {
             document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             document.getElementById('selectedMonth').value = i;
-            resetAdminInputs(); // [아빠 요청] 월 선택 시 입력창 초기화
+            loadExistingData(i); // [핵심] 해당 월의 데이터를 불러옵니다.
         };
         grid.appendChild(btn);
+    }
+}
+
+// [핵심 기능] 기존에 등록된 사진과 퀴즈를 불러와 화면에 표시
+async function loadExistingData(month) {
+    const family = localStorage.getItem('editingFamily');
+    const docRef = doc(db, "memories", `${family}_${month}`);
+    
+    // 일단 입력창 초기화
+    resetAdminInputs();
+
+    try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            
+            // 1. 퀴즈 정보 입력
+            document.getElementById('quizTitle').value = data.quiz || "";
+            document.getElementById('quizAns').value = data.ans || "";
+            const optInputs = document.querySelectorAll('.opt');
+            if(data.opts) {
+                data.opts.forEach((val, idx) => { if(optInputs[idx]) optInputs[idx].value = val; });
+            }
+
+            // 2. 사진 정보 표시
+            const container = document.getElementById('imagePreviewContainer');
+            photoDataUrls = data.photos || [];
+            selectedQuizPhotoIdx = photoDataUrls.length - 1; // 마지막 사진이 퀴즈 사진으로 저장됨
+
+            photoDataUrls.forEach((url, index) => {
+                const div = document.createElement('div');
+                div.className = "preview-item";
+                const isQuizImg = (index === selectedQuizPhotoIdx);
+                div.innerHTML = `
+                    <img src="${url}" id="prev_${index}" onclick="window.selectQuizPhoto(${index})" style="cursor:pointer; border-color: ${isQuizImg ? '#ff6b6b' : 'transparent'}">
+                    <span class="badge" id="badge_${index}" style="display: ${isQuizImg ? 'block' : 'none'}">퀴즈 사진</span>
+                `;
+                container.appendChild(div);
+            });
+            console.log(`${month}월 데이터를 성공적으로 불러왔습니다.`);
+        }
+    } catch (e) {
+        console.error("데이터 로드 실패:", e);
     }
 }
 
@@ -89,20 +132,28 @@ async function saveData() {
 
     alert("추억을 저장 중입니다... ⏳");
     try {
-        const urls = [];
+        const finalUrls = [];
+        // 새로 선택된 사진(data_url)은 업로드하고, 기존 URL은 그대로 유지
         for (let i = 0; i < photoDataUrls.length; i++) {
-            const sRef = ref(storage, `photos/${f}/${m}/${i}.jpg`);
-            await uploadString(sRef, photoDataUrls[i], 'data_url');
-            urls.push(await getDownloadURL(sRef));
+            if (photoDataUrls[i].startsWith('http')) {
+                finalUrls.push(photoDataUrls[i]);
+            } else {
+                const sRef = ref(storage, `photos/${f}/${m}/${Date.now()}_${i}.jpg`);
+                await uploadString(sRef, photoDataUrls[i], 'data_url');
+                finalUrls.push(await getDownloadURL(sRef));
+            }
         }
-        const quizImg = urls[selectedQuizPhotoIdx];
-        const finalPhotos = [...urls.filter((_, i) => i !== selectedQuizPhotoIdx), quizImg];
+        
+        // 퀴즈 사진을 맨 뒤로 보내는 로직 유지
+        const quizImg = finalUrls[selectedQuizPhotoIdx];
+        const otherPhotos = finalUrls.filter((_, i) => i !== selectedQuizPhotoIdx);
+        const sortedPhotos = [...otherPhotos, quizImg];
 
         await setDoc(doc(db, "memories", `${f}_${m}`), {
-            family: f, month: parseInt(m), photos: finalPhotos, quiz: q, opts: opts, ans: ans
+            family: f, month: parseInt(m), photos: sortedPhotos, quiz: q, opts: opts, ans: ans
         });
         alert(`${m}월 저장 완료! 💾`);
-    } catch (e) { alert("저장 실패!"); }
+    } catch (e) { alert("저장 실패!"); console.error(e); }
 }
 
 /* =========================================
@@ -122,8 +173,6 @@ async function startApp() {
         localStorage.setItem('currentFamily', f);
         document.getElementById('startScreen').classList.remove('active');
         document.getElementById('mainScreen').classList.add('active');
-        
-        // [아빠 요청] 제목에서 "네" 제거
         document.getElementById('welcomeMsg').innerText = `🏠 ${f} 추억 여행`;
 
         const bar = document.getElementById('userMonthBar');
@@ -155,7 +204,6 @@ function showContent() {
         viewer.innerHTML = `<img src="${currentData.photos[step]}" class="photo-view" onclick="window.nextStep()" style="width:100%; border-radius:15px; cursor:pointer;">`;
         info.innerText = `📷 사진 ${step + 1} / ${currentData.photos.length - 1}`;
     } else {
-        // [아빠 요청] 퀴즈 레이아웃 수정 및 "Q" 표시
         viewer.innerHTML = `
             <div style="text-align:center; margin-bottom:15px;">
                 <p style="font-weight:bold; color:var(--primary); margin-bottom:10px;">✨ 여기서 잠깐! 퀴즈 타임!</p>
@@ -170,7 +218,7 @@ function showContent() {
 }
 
 /* =========================================
-   [공통] 외부 연결 (매우 중요)
+   [공통] 외부 연결
    ========================================= */
 
 window.loginAdmin = loginAdmin;
