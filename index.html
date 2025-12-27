@@ -13,8 +13,9 @@
         <div class="input-group">
             <label class="input-label">🏠 가족 이름 정하기</label>
             <input type="text" id="adminFamilyGroup" placeholder="예: 문씨네, 우리집">
-            <label class="input-label" style="margin-top:15px;">🔑 우리만의 비밀번호 (4자리 숫자)</label>
-            <input type="password" id="adminPassword" placeholder="비밀번호 입력">
+            <label class="input-label" style="margin-top:15px;">🔑 우리만의 비밀번호</label>
+            <input type="password" id="adminPassword" placeholder="4자리 숫자">
+            <p style="font-size: 12px; color: #888; text-align: center; margin-top: 5px;">비밀번호는 숫자 4자리를 입력해주세요.</p>
         </div>
         <button class="primary-btn" onclick="loginAdmin()">추억 만들러 가기 ✨</button>
     </div>
@@ -23,31 +24,14 @@
         <h2 class="admin-title">📸 추억 기록하기</h2>
         <p id="currentEditingFamily" style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:15px;"></p>
         <div class="admin-form">
-            <label class="input-label">📅 몇 월의 추억인가요?</label>
-            <div class="month-grid" id="adminMonthGrid"></div>
-            <input type="hidden" id="selectedMonth" value="">
-            
-            <div class="guide-box">
-                💡 <b>사진과 퀴즈 팁!</b><br>
-                사진을 올린 뒤, <b>퀴즈로 내고 싶은 사진을 터치</b>해 주세요. 그 사진은 마지막에 퀴즈와 함께 나타납니다.
-            </div>
-            <input type="file" id="photoInput" multiple accept="image/*" onchange="previewImages(this)">
-            <div id="imagePreviewContainer" class="mobile-preview-grid"></div>
-
-            <div class="quiz-box" style="margin-top:20px;">
-                <label class="input-label">❓ 퀴즈 만들기</label>
-                <input type="text" id="quizTitle" placeholder="문제를 입력하세요">
-                <div class="month-grid" style="grid-template-columns: 1fr 1fr;">
-                    <input type="text" class="opt" placeholder="1번 보기">
-                    <input type="text" class="opt" placeholder="2번 보기">
-                    <input type="text" class="opt" placeholder="3번 보기">
-                    <input type="text" class="opt" placeholder="4번 보기">
-                </div>
-                <input type="number" id="quizAns" placeholder="정답 번호 (1-4)">
-            </div>
-            <button class="primary-btn" onclick="saveData()">우리 가족 추억 저장하기 💾</button>
-            <button class="sub-btn" onclick="location.href='memory.html'">🏠 가족용 화면 확인</button>
+            <input type="text" id="adminName" placeholder="이름 (예: 아빠)">
+            <input type="file" id="adminPhoto" accept="image/*">
+            <textarea id="adminMemo" placeholder="한 줄 메모를 남겨주세요... (최대 50자)"></textarea>
         </div>
+        <div id="adminMonthBar" class="month-bar"></div>
+        <button class="primary-btn" style="margin-top:15px;" onclick="uploadMemory()">추억 저장하기 💾</button>
+        <p class="logout-link" onclick="logoutAdmin()">나가기</p>
     </div>
+
 </body>
 </html>
