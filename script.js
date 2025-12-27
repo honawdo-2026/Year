@@ -1,8 +1,9 @@
-// 1. Firebase 초기화
+// 1. Firebase 라이브러리 로드
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
+// 2. Firebase 설정 (아빠의 year-5e6a5 프로젝트)
 const firebaseConfig = {
     apiKey: "AIzaSyBZuwP_9a46AWsxBnVnDCgCF7hF9tcg74s",
     authDomain: "year-5e6a5.firebaseapp.com",
@@ -16,14 +17,17 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-let currentData = null;
-let step = 0;
+// 전역 변수
 let photoDataUrls = [];
 let selectedQuizPhotoIdx = null;
+let currentData = null;
+let step = 0;
 
 /* =========================================
-   [관리자] 로그인 및 월별 버튼 생성
+   [통합] 관리자 기능 (index.html 용)
    ========================================= */
+
+// 관리자 로그인 함수
 async function loginAdmin() {
     const f = document.getElementById('adminFamilyGroup').value.trim();
     const p = document.getElementById('adminPassword').value.trim();
@@ -44,11 +48,12 @@ async function loginAdmin() {
         localStorage.setItem('editingFamily', f);
         document.getElementById('adminLoginScreen').classList.remove('active');
         document.getElementById('adminEditScreen').classList.add('active');
-        document.getElementById('currentEditingFamily').innerText = `❤️ ${f} 관리 화면 ❤️`;
+        document.getElementById('currentEditingFamily').innerText = `❤️ ${f} 가족 저장소 ❤️`;
         createAdminMonthButtons();
-    } catch (e) { alert("접속 오류 발생!"); }
+    } catch (e) { alert("접속 중 오류 발생!"); }
 }
 
+// 관리자용 월 선택 버튼 생성
 function createAdminMonthButtons() {
     const grid = document.getElementById('adminMonthGrid');
     if(!grid) return;
@@ -65,9 +70,7 @@ function createAdminMonthButtons() {
     }
 }
 
-/* =========================================
-   [관리자] 사진 미리보기 및 데이터 저장
-   ========================================= */
+// 사진 선택 및 미리보기
 window.previewImages = function(input) {
     const container = document.getElementById('imagePreviewContainer');
     container.innerHTML = ""; photoDataUrls = [];
@@ -90,6 +93,7 @@ window.selectQuizPhoto = function(idx) {
     document.getElementById(`badge_${idx}`).style.display = "block";
 };
 
+// 데이터 저장 (index.html 저장 버튼용)
 async function saveData() {
     const f = localStorage.getItem('editingFamily');
     const m = document.getElementById('selectedMonth').value;
@@ -97,9 +101,9 @@ async function saveData() {
     const ans = document.getElementById('quizAns').value;
     const opts = Array.from(document.querySelectorAll('.opt')).map(o => o.value);
 
-    if (!m || photoDataUrls.length === 0 || selectedQuizPhotoIdx === null) return alert("월 선택과 퀴즈 사진 지정은 필수입니다!");
+    if (!m || photoDataUrls.length === 0 || selectedQuizPhotoIdx === null) return alert("필수 정보를 모두 입력하세요!");
 
-    alert("추억을 저장 중입니다... 잠시만 기다려주세요! ⏳");
+    alert("저장 중입니다... 잠시만 기다려주세요! ⏳");
     try {
         const urls = [];
         for (let i = 0; i < photoDataUrls.length; i++) {
@@ -114,29 +118,32 @@ async function saveData() {
             family: f, month: parseInt(m), photos: finalPhotos, quiz: q, opts: opts, ans: ans
         });
         alert(`${m}월 저장 완료! 💾`);
-    } catch (e) { alert("저장 실패! 규칙을 확인하세요."); }
+    } catch (e) { alert("저장 실패! 규칙 설정을 확인하세요."); }
 }
 
 /* =========================================
-   [사용자] 여행 시작 및 월별 버튼 생성 (문제 해결 지점)
+   [통합] 사용자 기능 (memory.html 용)
    ========================================= */
+
+// 여행 시작하기 버튼 (가장 중요한 부분!)
 async function startApp() {
     const f = document.getElementById('targetFamily').value.trim();
     const u = document.getElementById('userName').value.trim();
-    if (!f || !u) return alert("정보를 모두 입력해주세요! 😊");
+    if (!f || !u) return alert("가족 이름과 본인 이름을 입력하세요! 😊");
 
     try {
+        // DB에서 해당 가족 이름의 데이터를 모두 가져옵니다.
         const q = query(collection(db, "memories"), where("family", "==", f));
         const snap = await getDocs(q);
 
-        if (snap.empty) return alert(`'${f}' 가족의 데이터를 찾을 수 없습니다!`);
+        if (snap.empty) return alert(`'${f}' 가족의 추억이 없습니다. 이름을 확인하세요!`);
 
         localStorage.setItem('currentFamily', f);
         document.getElementById('startScreen').classList.remove('active');
         document.getElementById('mainScreen').classList.add('active');
         document.getElementById('welcomeMsg').innerText = `🏠 ${f}네 추억 여행`;
 
-        // 사용자용 월별 버튼 생성
+        // 월 버튼 바 생성
         const bar = document.getElementById('userMonthBar');
         bar.innerHTML = "";
         const memories = [];
@@ -155,35 +162,32 @@ async function startApp() {
             };
             bar.appendChild(btn);
         });
-    } catch (e) { alert("데이터 조회 오류!"); }
+    } catch (e) { alert("조회 오류 발생!"); }
 }
 
+// 사진/퀴즈 보여주기
 function showContent() {
     const viewer = document.getElementById('viewer');
     const info = document.getElementById('pageInfo');
+    if(!currentData) return;
+
     if (step < currentData.photos.length - 1) {
         viewer.innerHTML = `<img src="${currentData.photos[step]}" class="photo-view" onclick="window.nextStep()" style="width:100%; border-radius:15px; cursor:pointer;">`;
         info.innerText = `📷 사진 ${step + 1} / ${currentData.photos.length - 1} (터치하면 다음 사진)`;
     } else {
-        showQuiz();
+        viewer.innerHTML = `
+            <img src="${currentData.photos[currentData.photos.length-1]}" class="quiz-img" style="width:100%; border-radius:15px;">
+            <h3 style="text-align:center;">❓ ${currentData.quiz}</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                ${currentData.opts.map((o, i) => `<button class="opt-btn" onclick="window.checkAnswer(${i+1})">${i+1}. ${o}</button>`).join('')}
+            </div>`;
+        info.innerText = "❓ 퀴즈 타임!";
     }
 }
 
-function showQuiz() {
-    const viewer = document.getElementById('viewer');
-    const info = document.getElementById('pageInfo');
-    info.innerText = "❓ 마지막 퀴즈 타임!";
-    viewer.innerHTML = `
-        <img src="${currentData.photos[currentData.photos.length-1]}" class="quiz-img" style="width:100%; border-radius:15px;">
-        <h3>❓ ${currentData.quiz}</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            ${currentData.opts.map((o, i) => `<button class="opt-btn" onclick="window.checkAnswer(${i+1})">${i+1}. ${o}</button>`).join('')}
-        </div>`;
-}
-
-// 전역 함수 등록 (HTML에서 호출 가능하도록)
+// 정답 확인 및 전역 등록
 window.loginAdmin = loginAdmin;
 window.saveData = saveData;
 window.startApp = startApp;
 window.nextStep = () => { step++; showContent(); };
-window.checkAnswer = (ans) => alert(ans == currentData.ans ? "정답입니다! 🎉" : `틀렸어요! 정답은 ${currentData.ans}번 입니다. 😢`);
+window.checkAnswer = (ans) => alert(ans == currentData.ans ? "정답입니다! 🎉" : `틀렸어요! 정답은 ${currentData.ans}번! 😢`);
