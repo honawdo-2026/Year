@@ -210,3 +210,37 @@ input:focus {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
+/* 월 버튼에 마우스 손가락 모양 추가 */
+.month-btn {
+    flex: 0 0 auto;
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 2px solid #ffb6c1;
+    background: white;
+    font-weight: bold;
+    color: var(--primary);
+    cursor: pointer; /* 손가락 모양 추가 */
+    transition: 0.2s;
+}
+
+.month-btn:hover {
+    background: #fff0f0;
+}
+
+/* 퀴즈 보기 버튼에도 손가락 모양 추가 */
+.opt-btn {
+    width: 100%;
+    padding: 15px;
+    margin: 8px 0;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    background: #fdfdfd;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer; /* 손가락 모양 추가 */
+}
+
+.opt-btn:hover {
+    background: #f0f0f0;
+    border-color: var(--primary);
+}
