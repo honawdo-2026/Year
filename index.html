@@ -23,14 +23,38 @@
     <div id="adminEditScreen" class="glass-container">
         <h2 class="admin-title">📸 추억 기록하기</h2>
         <p id="currentEditingFamily" style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:15px;"></p>
-        <div class="admin-form">
-            <input type="text" id="adminName" placeholder="이름 (예: 아빠)">
-            <input type="file" id="adminPhoto" accept="image/*">
-            <textarea id="adminMemo" placeholder="한 줄 메모를 남겨주세요... (최대 50자)"></textarea>
+
+        <!-- 1. 월 선택 -->
+        <label class="input-label">🗓️ 수정할 월 선택</label>
+        <div id="adminMonthGrid" class="month-grid"></div>
+        <input type="hidden" id="selectedMonth">
+
+        <!-- 2. 사진 업로드 -->
+        <label class="input-label" style="margin-top: 20px;">🖼️ 사진 등록 (여러 장 선택 가능)</label>
+        <div class="guide-box">
+            사진을 올린 후, 퀴즈로 사용할 사진을 클릭해서 선택해주세요! (빨간 테두리로 표시)
         </div>
-        <div id="adminMonthBar" class="month-bar"></div>
-        <button class="primary-btn" style="margin-top:15px;" onclick="uploadMemory()">추억 저장하기 💾</button>
-        <p class="logout-link" onclick="logoutAdmin()">나가기</p>
+        <input type="file" id="photoInput" accept="image/*" multiple onchange="window.previewImages(this)">
+
+        <!-- 3. 사진 미리보기 -->
+        <div id="imagePreviewContainer" class="mobile-preview-grid"></div>
+
+        <!-- 4. 퀴즈 만들기 -->
+        <div style="margin-top: 20px;">
+            <label class="input-label">✍️ 퀴즈 만들기</label>
+            <input type="text" id="quizTitle" placeholder="Q. 퀴즈 질문을 입력하세요">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap: 8px; margin-bottom:8px;">
+                <input type="text" class="opt" placeholder="보기 1">
+                <input type="text" class="opt" placeholder="보기 2">
+                <input type="text" class="opt" placeholder="보기 3">
+                <input type="text" class="opt" placeholder="보기 4">
+            </div>
+            <input type="number" id="quizAns" min="1" max="4" placeholder="정답 번호 (1~4)">
+        </div>
+
+        <!-- 5. 저장/나가기 버튼 -->
+        <button class="primary-btn" style="margin-top:15px;" onclick="saveData()">이달의 추억 저장하기 💾</button>
+        <p class="logout-link" onclick="logoutAdmin()" style="cursor:pointer; text-align:center; margin-top:15px; color:#888;">나가기</p>
     </div>
 
 </body>

@@ -3,30 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>우리 가족 추억 여행 🏠</title>
+    <title>가족 추억 보기 ❤️</title>
     <link rel="stylesheet" href="style.css">
     <script type="module" src="script.js" defer></script>
 </head>
 <body>
+    <!-- 1. 시작 화면 -->
     <div id="startScreen" class="glass-container active">
-        <h1 class="main-title">👨‍👩‍👧‍👦 우리 가족 추억 여행</h1>
+        <h2 class="main-title">💝<br>우리 가족의<br>소중한 추억을 열어보세요</h2>
         <div class="input-group">
-            <label class="input-label">🏠 찾는 가족 이름</label>
-            <input type="text" id="targetFamily" placeholder="예: 우리집">
-            <label class="input-label" style="margin-top:15px;">👤 당신의 이름</label>
-            <input type="text" id="userName" placeholder="본인 이름을 입력하세요">
+            <label class="input-label">🏠 우리 가족 이름</label>
+            <input type="text" id="targetFamily" placeholder="관리자에서 정한 이름">
+            <label class="input-label" style="margin-top:15px;">👤 당신의 이름은?</label>
+            <input type="text" id="userName" placeholder="별명도 좋아요!">
         </div>
-        <button class="primary-btn" onclick="startApp()">여행 시작하기 🚀</button>
+        <button class="primary-btn" onclick="startApp()">추억 여행 떠나기 🚀</button>
     </div>
 
+    <!-- 2. 메인 화면 (추억 보기) -->
     <div id="mainScreen" class="glass-container">
-        <h2 id="welcomeMsg" class="admin-title"></h2>
-        <div id="userMonthBar" class="month-bar"></div>
-        <div id="viewer" class="viewer-container">
-            <p style="text-align:center; padding:50px;">보고 싶은 달을 선택해 주세요! ✨</p>
-        </div>
-        <div id="pageInfo" class="page-info" style="text-align:center; margin-top:10px; color:#666;"></div>
-        <button id="resultBtn" class="primary-btn" style="display:none; margin-top:20px;" onclick="showFinalResult()">🏆 최종 순위 보기</button>
+        <h2 id="welcomeMsg" class="main-title"></h2>
+        
+        <!-- 월 선택 바 -->
+        <div id="userMonthBar" class="month-scroll-bar"></div>
+        
+        <!-- 콘텐츠 뷰어 -->
+        <div id="viewer"></div>
+        <p id="pageInfo" class="mobile-info"></p>
     </div>
 </body>
 </html>
