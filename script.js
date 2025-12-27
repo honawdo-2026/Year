@@ -21,7 +21,7 @@ let photoDataUrls = [];
 let selectedQuizPhotoIdx = null;
 
 /* =========================================
-   [관리자] 기능 및 초기화 (index.html)
+   [관리자] 기능 (index.html)
    ========================================= */
 
 async function loginAdmin() {
@@ -62,7 +62,7 @@ function createAdminMonthButtons() {
             document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             document.getElementById('selectedMonth').value = i;
-            resetAdminInputs(); // 월 선택 시 입력창 초기화
+            resetAdminInputs(); // [아빠 요청] 월 선택 시 입력창 초기화
         };
         grid.appendChild(btn);
     }
@@ -77,28 +77,6 @@ function resetAdminInputs() {
     document.querySelectorAll('.opt').forEach(opt => opt.value = "");
     document.getElementById('quizAns').value = "";
 }
-
-window.previewImages = function(input) {
-    const container = document.getElementById('imagePreviewContainer');
-    container.innerHTML = ""; photoDataUrls = [];
-    Array.from(input.files).forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const div = document.createElement('div'); div.className = "preview-item";
-            div.innerHTML = `<img src="${e.target.result}" id="prev_${index}" onclick="selectQuizPhoto(${index})" style="cursor:pointer;"><span class="badge" id="badge_${index}">퀴즈 사진</span>`;
-            container.appendChild(div); photoDataUrls.push(e.target.result);
-        };
-        reader.readAsDataURL(file);
-    });
-};
-
-window.selectQuizPhoto = function(idx) {
-    selectedQuizPhotoIdx = idx;
-    document.querySelectorAll('.preview-item img').forEach(img => img.style.borderColor = "transparent");
-    document.querySelectorAll('.badge').forEach(b => b.style.display = "none");
-    document.getElementById(`prev_${idx}`).style.borderColor = "#ff6b6b";
-    document.getElementById(`badge_${idx}`).style.display = "block";
-};
 
 async function saveData() {
     const f = localStorage.getItem('editingFamily');
@@ -128,7 +106,7 @@ async function saveData() {
 }
 
 /* =========================================
-   [사용자] 기능 및 UI 수정 (memory.html)
+   [사용자] 기능 (memory.html)
    ========================================= */
 
 async function startApp() {
@@ -144,7 +122,8 @@ async function startApp() {
         localStorage.setItem('currentFamily', f);
         document.getElementById('startScreen').classList.remove('active');
         document.getElementById('mainScreen').classList.add('active');
-        // 제목에서 "네" 제거
+        
+        // [아빠 요청] 제목에서 "네" 제거
         document.getElementById('welcomeMsg').innerText = `🏠 ${f} 추억 여행`;
 
         const bar = document.getElementById('userMonthBar');
@@ -176,7 +155,7 @@ function showContent() {
         viewer.innerHTML = `<img src="${currentData.photos[step]}" class="photo-view" onclick="window.nextStep()" style="width:100%; border-radius:15px; cursor:pointer;">`;
         info.innerText = `📷 사진 ${step + 1} / ${currentData.photos.length - 1}`;
     } else {
-        // 퀴즈 레이아웃 수정: 문구 상단 이동 및 "Q" 표시
+        // [아빠 요청] 퀴즈 레이아웃 수정 및 "Q" 표시
         viewer.innerHTML = `
             <div style="text-align:center; margin-bottom:15px;">
                 <p style="font-weight:bold; color:var(--primary); margin-bottom:10px;">✨ 여기서 잠깐! 퀴즈 타임!</p>
@@ -190,9 +169,34 @@ function showContent() {
     }
 }
 
-// HTML 파일에서 함수를 직접 호출할 수 있도록 window 객체에 등록 [매우 중요]
+/* =========================================
+   [공통] 외부 연결 (매우 중요)
+   ========================================= */
+
 window.loginAdmin = loginAdmin;
 window.saveData = saveData;
 window.startApp = startApp;
 window.nextStep = () => { step++; showContent(); };
 window.checkAnswer = (ans) => alert(ans == currentData.ans ? "정답입니다! 🎉" : "틀렸어요! 😢");
+
+window.previewImages = function(input) {
+    const container = document.getElementById('imagePreviewContainer');
+    container.innerHTML = ""; photoDataUrls = [];
+    Array.from(input.files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const div = document.createElement('div'); div.className = "preview-item";
+            div.innerHTML = `<img src="${e.target.result}" id="prev_${index}" onclick="window.selectQuizPhoto(${index})" style="cursor:pointer;"><span class="badge" id="badge_${index}">퀴즈 사진</span>`;
+            container.appendChild(div); photoDataUrls.push(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
+window.selectQuizPhoto = function(idx) {
+    selectedQuizPhotoIdx = idx;
+    document.querySelectorAll('.preview-item img').forEach(img => img.style.borderColor = "transparent");
+    document.querySelectorAll('.badge').forEach(b => b.style.display = "none");
+    document.getElementById(`prev_${idx}`).style.borderColor = "#ff6b6b";
+    document.getElementById(`badge_${idx}`).style.display = "block";
+};
