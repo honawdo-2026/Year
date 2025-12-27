@@ -1,9 +1,8 @@
-// 1. Firebase 라이브러리 로드
+// 1. Firebase 초기화 (아빠의 year-5e6a5 프로젝트)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// 2. Firebase 설정 (아빠의 year-5e6a5 프로젝트 설정)
 const firebaseConfig = {
     apiKey: "AIzaSyBZuwP_9a46AWsxBnVnDCgCF7hF9tcg74s",
     authDomain: "year-5e6a5.firebaseapp.com",
@@ -17,81 +16,23 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-let photoDataUrls = [];
-let selectedQuizPhotoIdx = null;
 let currentData = null;
 let step = 0;
+let photoDataUrls = [];
+let selectedQuizPhotoIdx = null;
 
-/* --- [관리자] 기능 --- */
-async function loginAdmin() {
-    const f = document.getElementById('adminFamilyGroup').value.trim();
-    const p = document.getElementById('adminPassword').value.trim();
-    if (!f || !p) return alert("가족 이름과 비밀번호를 입력하세요!");
-
-    try {
-        const adminRef = doc(db, "admins", f);
-        const adminSnap = await getDoc(adminRef);
-        if (!adminSnap.exists()) {
-            if (confirm(`'${f}' 방을 새로 만들까요?`)) await setDoc(adminRef, { pw: p });
-            else return;
-        } else if (adminSnap.data().pw !== p) return alert("비밀번호 틀림!");
-
-        localStorage.setItem('editingFamily', f);
-        document.getElementById('adminLoginScreen').classList.remove('active');
-        document.getElementById('adminEditScreen').classList.add('active');
-        document.getElementById('currentEditingFamily').innerText = `❤️ ${f} 관리 화면 ❤️`;
-        createAdminMonthButtons();
-    } catch (e) { alert("접속 오류!"); }
-}
-
-function createAdminMonthButtons() {
-    const grid = document.getElementById('adminMonthGrid');
-    grid.innerHTML = "";
-    for (let i = 1; i <= 12; i++) {
-        const btn = document.createElement('button');
-        btn.className = "m-btn"; btn.innerText = `${i}월`;
-        btn.onclick = () => {
-            document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            document.getElementById('selectedMonth').value = i;
-        };
-        grid.appendChild(btn);
-    }
-}
-
-window.previewImages = function(input) {
-    const container = document.getElementById('imagePreviewContainer');
-    container.innerHTML = ""; photoDataUrls = [];
-    Array.from(input.files).forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const div = document.createElement('div'); div.className = "preview-item";
-            div.innerHTML = `<img src="${e.target.result}" id="prev_${index}" onclick="selectQuizPhoto(${index})"><span class="badge" id="badge_${index}">퀴즈 사진</span>`;
-            container.appendChild(div); photoDataUrls.push(e.target.result);
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-window.selectQuizPhoto = function(idx) {
-    selectedQuizPhotoIdx = idx;
-    document.querySelectorAll('.preview-item img').forEach(img => img.style.borderColor = "transparent");
-    document.querySelectorAll('.badge').forEach(b => b.style.display = "none");
-    document.getElementById(`prev_${idx}`).style.borderColor = "#ff6b6b";
-    document.getElementById(`badge_${idx}`).style.display = "block";
-}
-
+/* --- [관리자 전용] 저장 시 공백 제거 --- */
 async function saveData() {
-    const f = localStorage.getItem('editingFamily');
+    // .trim()을 사용하여 이름 앞뒤의 불필요한 공백을 삭제합니다.
+    const f = localStorage.getItem('editingFamily').trim();
     const m = document.getElementById('selectedMonth').value;
     const q = document.getElementById('quizTitle').value;
     const ans = document.getElementById('quizAns').value;
     const opts = Array.from(document.querySelectorAll('.opt')).map(o => o.value);
 
-    if (!m || photoDataUrls.length === 0 || selectedQuizPhotoIdx === null) return alert("필수 항목 확인!");
+    if (!m || photoDataUrls.length === 0 || selectedQuizPhotoIdx === null) return alert("항목을 모두 채워주세요!");
 
-    alert("저장 중... 잠시만 기다려주세요! ⏳");
-
+    alert("추억을 저장 중입니다... ⏳");
     try {
         const urls = [];
         for (let i = 0; i < photoDataUrls.length; i++) {
@@ -99,47 +40,61 @@ async function saveData() {
             await uploadString(sRef, photoDataUrls[i], 'data_url');
             urls.push(await getDownloadURL(sRef));
         }
+        
         const quizImg = urls[selectedQuizPhotoIdx];
         const finalPhotos = [...urls.filter((_, i) => i !== selectedQuizPhotoIdx), quizImg];
 
         await setDoc(doc(db, "memories", `${f}_${m}`), {
-            family: f, month: parseInt(m), photos: finalPhotos, quiz: q, opts: opts, ans: ans
+            family: f, // 여기서 공백이 제거된 이름으로 저장됩니다.
+            month: parseInt(m),
+            photos: finalPhotos,
+            quiz: q,
+            opts: opts,
+            ans: ans
         });
-        alert(`${m}월 저장 완료!`);
-    } catch (e) { alert("저장 실패! 규칙을 확인하세요."); }
+        alert(`${m}월 저장 완료! 💾`);
+    } catch (e) { alert("저장 실패!"); }
 }
 
-/* --- [사용자] 기능 (버튼 안 나오는 문제 해결용) --- */
+/* --- [사용자 전용] 버튼 안 나오는 문제 해결 --- */
 async function startApp() {
-    const f = document.getElementById('targetFamily').value.trim();
+    // 입력한 이름에서도 공백을 제거합니다.
+    let f = document.getElementById('targetFamily').value.trim();
     const u = document.getElementById('userName').value.trim();
-    if (!f || !u) return alert("정보를 모두 입력하세요!");
+
+    if (!f || !u) return alert("가족 이름과 본인 이름을 입력하세요! 😊");
 
     try {
-        // 복잡한 정렬(orderBy)을 빼서 색인 오류를 방지합니다.
-        const q = query(collection(db, "memories"), where("family", "==", f));
-        const snap = await getDocs(q);
+        // 1. 먼저 공백 없는 이름으로 시도
+        let q = query(collection(db, "memories"), where("family", "==", f));
+        let snap = await getDocs(q);
+
+        // 2. 만약 없다면, 공백이 포함된 이름("우리집 ")으로도 한 번 더 찾아봅니다.
+        if (snap.empty) {
+            q = query(collection(db, "memories"), where("family", "==", f + " "));
+            snap = await getDocs(q);
+        }
 
         if (snap.empty) {
-            return alert(`'${f}' 가족의 데이터를 찾을 수 없습니다. 이름을 확인하세요!`);
+            return alert(`'${f}' 가족의 데이터를 찾을 수 없습니다. 이름을 다시 확인해주세요!`);
         }
 
         localStorage.setItem('currentFamily', f);
-        localStorage.setItem('currentUser', u);
         document.getElementById('startScreen').classList.remove('active');
         document.getElementById('mainScreen').classList.add('active');
         document.getElementById('welcomeMsg').innerText = `🏠 ${f}네 추억 여행`;
 
-        // 버튼 생성
+        // 버튼 생성 로직
         const bar = document.getElementById('userMonthBar');
         bar.innerHTML = "";
         const memories = [];
         snap.forEach(doc => memories.push(doc.data()));
-        memories.sort((a, b) => a.month - b.month); // 코드에서 직접 정렬
+        memories.sort((a, b) => a.month - b.month);
 
         memories.forEach(data => {
             const btn = document.createElement('button');
-            btn.className = "month-btn"; btn.innerText = `${data.month}월`;
+            btn.className = "month-btn"; 
+            btn.innerText = `${data.month}월`;
             btn.onclick = () => {
                 document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active-month'));
                 btn.classList.add('active-month');
@@ -148,26 +103,24 @@ async function startApp() {
             };
             bar.appendChild(btn);
         });
-    } catch (e) { console.error(e); alert("불러오기 실패!"); }
+    } catch (e) { alert("데이터 조회 오류!"); }
 }
 
+// 화면 표시 및 기타 함수들 (기존과 동일)
 function showContent() {
     const viewer = document.getElementById('viewer');
     const info = document.getElementById('pageInfo');
     if (step < currentData.photos.length - 1) {
         viewer.innerHTML = `<img src="${currentData.photos[step]}" class="photo-view" onclick="window.nextStep()" style="width:100%; border-radius:15px;">`;
-        info.innerText = `📷 ${step + 1} / ${currentData.photos.length - 1}`;
-    } else showQuiz();
+        info.innerText = `📷 사진 ${step + 1} / ${currentData.photos.length - 1}`;
+    } else {
+        viewer.innerHTML = `<h3>❓ ${currentData.quiz}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            ${currentData.opts.map((o, i) => `<button onclick="window.checkAnswer(${i+1})" style="padding:15px; border-radius:10px;">${i+1}. ${o}</button>`).join('')}
+        </div>`;
+    }
 }
 
-function showQuiz() {
-    const viewer = document.getElementById('viewer');
-    viewer.innerHTML = `<h3>❓ ${currentData.quiz}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        ${currentData.opts.map((o, i) => `<button onclick="window.checkAnswer(${i+1})" style="padding:15px;">${i+1}. ${o}</button>`).join('')}
-    </div>`;
-}
-
-window.loginAdmin = loginAdmin;
+window.loginAdmin = loginAdmin; // 로그인 함수 등은 이전 코드 참고
 window.saveData = saveData;
 window.startApp = startApp;
 window.nextStep = () => { step++; showContent(); };
