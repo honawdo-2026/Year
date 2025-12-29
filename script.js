@@ -12,7 +12,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+export const db = getFirestore(app);
 const storage = getStorage(app);
 
 let currentData = null;
@@ -221,9 +221,19 @@ function showContent() {
    [공통] 외부 연결
    ========================================= */
 
+function promptForAdminLogin() {
+    const password = prompt("관리자 비밀번호를 입력하세요.");
+    if (password === "2026") {
+        window.location.href = "admin.html";
+    } else {
+        alert("비밀번호가 틀렸습니다.");
+    }
+}
+
 window.loginAdmin = loginAdmin;
 window.saveData = saveData;
 window.startApp = startApp;
+window.promptForAdminLogin = promptForAdminLogin;
 window.nextStep = () => { step++; showContent(); };
 window.checkAnswer = (ans) => alert(ans == currentData.ans ? "정답입니다! 🎉" : "틀렸어요! 😢");
 
