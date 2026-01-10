@@ -54,10 +54,14 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 4px 12px rgba(0,0,0,0.6);
         }
-        .capture-btn {
+        .top-icons {
             position: absolute;
             top: 20px;
             left: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        .icon-btn {
             width: 48px;
             height: 48px;
             background: rgba(255, 255, 255, 0.25);
@@ -72,98 +76,112 @@
             align-items: center;
             justify-content: center;
             font-size: 24px;
-            overflow: hidden;
         }
-        .capture-btn:hover {
+        .icon-btn:hover {
             background: rgba(255, 255, 255, 0.4);
             transform: scale(1.1);
         }
-        .capture-btn::before {
-            content: "📷";
-        }
         @media (max-width: 600px) {
-            h1 {
-                font-size: 2em;
-            }
-            p {
-                font-size: 1em;
-            }
+            h1 { font-size: 2em; }
+            p { font-size: 1em; }
             .service-title {
                 font-size: 1.4em;
                 padding: 6px 14px;
                 top: 15px;
                 right: 15px;
             }
-            .capture-btn {
-                width: 42px;
-                height: 42px;
+            .top-icons {
                 top: 15px;
                 left: 15px;
+                gap: 12px;
+            }
+            .icon-btn {
+                width: 42px;
+                height: 42px;
                 font-size: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="service-title">오늘의 역사(1월 11일)</div>
-    <div class="overlay">
-        <h1 id="event-title"></h1>
-        <p id="event-desc"></p>
+    <div class="service-title">오늘의 역사</div>
+
+    <div class="top-icons">
+        <button class="icon-btn" onclick="captureScreen()" title="캡처 저장">📷</button>
+        <button class="icon-btn" onclick="location.reload()" title="새로고침">↻</button>
     </div>
 
-    <button class="capture-btn" onclick="captureScreen()" title="캡처 저장"></button>
+    <div id="capture-area">
+        <div class="overlay">
+            <h1 id="event-title">로딩 중...</h1>
+            <p id="event-desc"></p>
+        </div>
+    </div>
 
     <script>
-        // 오늘 날짜 자동 인식
         const today = new Date();
-        const month = today.getMonth() + 1;
-        const day = today.getDate();
+        const month = (today.getMonth() + 1).toString().padStart(2, '0');
+        const day = today.getDate().toString().padStart(2, '0');
 
-        // 1월 11일의 5개 역사적 사건 (이미지와 키워드 연관성 높음, 예시로 변경)
-        const events = [
-            {
-                title: "줄리어스 시저, 루비콘 강을 건너다 (기원전 49년)",
-                desc: "로마 내전을 촉발시킨 역사적 순간으로, 시저의 독재자 임명을 이끌었습니다.",
-                image: "https://www.historyhit.com/app/uploads/2017/01/Caesar-crossing-the-Rubicon.-49-BC.jpg"
-            },
-            {
-                title: "토마스 페인, '상식(Common Sense)' 출간 (1776년)",
-                desc: "영국으로부터의 독립을 주장하며 미국 독립혁명을 촉진한 팸플릿.",
-                image: "https://constitutioncenter.org/images/uploads/blog/commonsense.jpg"
-            },
-            {
-                title: "런던 지하철 개통, 세계 최초의 지하철 (1863년)",
-                desc: "도시 교통을 혁신한 메트로폴리탄 철도의 개통.",
-                image: "https://oddsalon.com/wp-content/uploads/2016/01/ztrialUnderground1863.jpg"
-            },
-            {
-                title: "국제연맹 창설 (1920년)",
-                desc: "제1차 세계대전 후 세계 평화를 위한 최초의 국제 기구.",
-                image: "https://cdnph.upi.com/svc/sv/upi_com/3271510630366/archives/1/417cd9d12e4429238e24c110776a37a3/First-meeting-of-assembly-of-League-of-Nations-is-open.jpg"
-            },
-            {
-                title: "유엔 총회 첫 회의 (1946년)",
-                desc: "전 세계 협력과 평화를 위한 유엔의 시작.",
-                image: "https://www.thenation.com/wp-content/uploads/2015/04/un_newyork.jpg"
+        // 서비스 제목 동적으로 업데이트
+        document.querySelector('.service-title').textContent = `오늘의 역사(${parseInt(month)}월 ${parseInt(day)}일)`;
+
+        // Wikimedia API 호출 (영어 버전 사용, 한국어 버전은 데이터 부족)
+        const apiUrl = `https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/all/${month}/${day}`;
+
+        async function fetchHistoricalEvents() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                // events, selected, births, deaths 등에서 랜덤 이벤트 선택 (events 우선)
+                let allEvents = [
+                    ...(data.events || []),
+                    ...(data.selected || []),
+                    ...(data.births || []).map(b => ({ ...b, text: `출생: ${b.text}` })),
+                    ...(data.deaths || []).map(d => ({ ...d, text: `사망: ${d.text}` })),
+                    ...(data.holidays || [])
+                ];
+
+                if (allEvents.length === 0) {
+                    throw new Error('No events found');
+                }
+
+                // 랜덤 이벤트 선택 (새로고침 시 다른 이벤트)
+                const randomIndex = Math.floor(Math.random() * allEvents.length);
+                const selectedEvent = allEvents[randomIndex];
+
+                // 제목: text + year
+                const title = `${selectedEvent.text} (${selectedEvent.year})`;
+
+                // 설명: pages[0]의 extract (상세 설명)
+                const desc = selectedEvent.pages?.[0]?.extract || '상세 설명 없음.';
+
+                // 이미지: pages[0]의 thumbnail 또는 originalimage, fallback 이미지
+                const imageUrl = selectedEvent.pages?.[0]?.originalimage?.source ||
+                                 selectedEvent.pages?.[0]?.thumbnail?.source ||
+                                 'https://via.placeholder.com/800x600?text=Historical+Image'; // fallback
+
+                // 배경 이미지 설정
+                document.body.style.backgroundImage = `url(${imageUrl})`;
+
+                // 텍스트 업데이트
+                document.getElementById('event-title').textContent = title;
+                document.getElementById('event-desc').textContent = desc;
+
+            } catch (error) {
+                console.error('Error fetching events:', error);
+                document.getElementById('event-title').textContent = '이벤트 로딩 실패';
+                document.getElementById('event-desc').textContent = 'API에서 데이터를 가져오지 못했습니다.';
             }
-        ];
+        }
 
-        // 페이지 로드 시 랜덤 이벤트 선택 (새로고침 시 변경)
-        window.onload = function() {
-            const randomIndex = Math.floor(Math.random() * events.length);
-            const selectedEvent = events[randomIndex];
+        // 페이지 로드 시 API 호출
+        window.onload = fetchHistoricalEvents;
 
-            // 배경 이미지 설정
-            document.body.style.backgroundImage = `url(${selectedEvent.image})`;
-
-            // 텍스트 업데이트
-            document.getElementById('event-title').textContent = selectedEvent.title;
-            document.getElementById('event-desc').textContent = selectedEvent.desc;
-        };
-
-        // 화면 캡처 및 다운로드 함수
         function captureScreen() {
-            html2canvas(document.body, {
+            const element = document.getElementById('capture-area');
+            html2canvas(element, {
                 allowTaint: true,
                 useCORS: true,
                 scale: 2
