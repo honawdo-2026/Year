@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>슬라이드 디자인 프롬프트 생성기</title>
+<style>
+:root {
+  --navy: #000080;
+  --navy-light: #0000a8;
+  --navy-pale: #e8eaf6;
+  --white: #ffffff;
+  --black: #111111;
+  --gray-100: #f7f8fc;
+  --gray-200: #eef0f7;
+  --gray-300: #dde1ef;
+  --gray-400: #b8bdd6;
+  --gray-600: #666e8a;
+  --accent: #ff6b35;
+  --green: #1a7a4a;
+  --radius: 10px;
+  --shadow: 0 2px 16px rgba(0,0,128,0.10);
+  --shadow-lg: 0 6px 32px rgba(0,0,128,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
+  background: #f4f5fb;
+  color: var(--black);
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+/* ── 헤더 ── */
+.header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 0 40px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-icon { font-size: 26px; }
+.header-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.header-sub { font-size: 13px; opacity: 0.65; margin-left: auto; }
+
+/* ── 메인 레이아웃 ── */
+.layout {
+  display: flex;
+  max-width: 1280px;
+  margin: 0 auto;
+  gap: 0;
+  min-height: calc(100vh - 64px);
+}
+
+/* ── 사이드바 (스텝 네비) ── */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-right: 1.5px solid var(--gray-300);
+  padding: 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+
+.step-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-600);
+  text-align: left;
+  border-left: 3px solid transparent;
+  transition: all 0.18s;
+}
+.step-nav-btn:hover { background: var(--gray-100); color: var(--navy); }
+.step-nav-btn.active {
+  background: var(--navy-pale);
+  color: var(--navy);
+  border-left-color: var(--navy);
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--gray-200);
+  color: var(--gray-600);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.18s;
+}
+.step-nav-btn.active .step-num,
+.step-nav-btn.done .step-num {
+  background: var(--navy);
+  color: var(--white);
+}
+.step-nav-btn.done { color: var(--navy); }
+
+/* ── 콘텐츠 영역 ── */
+.content {
+  flex: 1;
+  padding: 32px 36px 60px;
+  overflow-y: auto;
+}
+
+/* ── 섹션 ── */
+.step-section { display: none; }
+.step-section.active { display: block; animation: fadeUp 0.22s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--navy);
+}
+.section-icon { font-size: 22px; }
+.section-title { font-size: 20px; font-weight: 700; color: var(--navy); }
+.section-desc { font-size: 13px; color: var(--gray-600); margin-left: auto; }
+
+/* ── 카드 ── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--gray-300);
+  padding: 24px 26px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── 폼 요소 ── */
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+
+label.lbl {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 7px;
+}
+.required { color: var(--accent); margin-left: 3px; }
+
+input[type="text"],
+input[type="number"],
+textarea {
+  width: 100%;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 7px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--black);
+  background: var(--gray-100);
+  transition: border 0.18s, background 0.18s;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--navy);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(0,0,128,0.08);
+}
+textarea { resize: vertical; }
+
+/* ── 체크박스 버튼 그룹 ── */
+.check-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.check-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border: 2px solid var(--gray-300);
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-600);
+  background: var(--white);
+  transition: all 0.18s;
+  user-select: none;
+}
+.check-pill input[type="checkbox"] { display: none; }
+.check-pill:hover { border-color: var(--navy); color: var(--navy); background: var(--navy-pale); }
+.check-pill.on { border-color: var(--navy); background: var(--navy); color: var(--white); }
+
+.check-pill .pill-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.check-pill.on .pill-dot::after {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--white);
+}
+
+/* ── 행 2열 ── */
+.row2 { display: flex; gap: 16px; flex-wrap: wrap; }
+.row2 > .field { flex: 1; min-width: 200px; }
+
+/* ── 버튼 ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.btn-primary { background: var(--navy); color: var(--white); }
+.btn-primary:hover { background: var(--navy-light); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.btn-secondary { background: var(--gray-200); color: var(--navy); border: 2px solid var(--navy); }
+.btn-secondary:hover { background: var(--navy-pale); }
+.btn-danger { background: #c0392b; color: var(--white); }
+.btn-danger:hover { background: #a93226; }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+.btn-ghost { background: none; color: var(--gray-600); border: 1.5px solid var(--gray-300); }
+.btn-ghost:hover { color: var(--navy); border-color: var(--navy); background: var(--navy-pale); }
+.btn-green { background: var(--green); color: var(--white); }
+.btn-green:hover { background: #155c38; }
+
+/* ── 이미지 업로드 영역 ── */
+.upload-zone {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius);
+  padding: 30px 20px;
+  text-align: center;
+  background: var(--gray-100);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--navy);
+  background: var(--navy-pale);
+}
+.upload-zone-icon { font-size: 36px; margin-bottom: 8px; }
+.upload-zone p { font-size: 14px; color: var(--gray-600); }
+.upload-zone small { font-size: 12px; color: var(--gray-400); margin-top: 4px; display: block; }
+
+/* ── 이미지 그리드 ── */
+.img-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.img-thumb {
+  position: relative;
+  width: 120px;
+  height: 90px;
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1.5px solid var(--gray-300);
+  background: var(--gray-200);
+}
+.img-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.img-thumb-del {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(192,57,43,0.9);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.img-count {
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: 10px;
+}
+
+/* ── 코드블록 ── */
+.code-wrap {
+  margin-top: 16px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--gray-300);
+  overflow: hidden;
+}
+.code-header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+.code-body {
+  background: #1a1a2e;
+  color: #e8eaf6;
+  padding: 20px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 480px;
+  overflow-y: auto;
+  min-height: 80px;
+}
+.code-placeholder { color: #666e8a; font-style: italic; }
+
+/* ── 스피너 ── */
+.spinner {
+  display: none;
+  width: 36px; height: 36px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 20px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 정보 배너 ── */
+.info-banner {
+  background: var(--navy-pale);
+  border-left: 4px solid var(--navy);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--navy);
+  margin-bottom: 20px;
+}
+.warn-banner {
+  background: #fff8f3;
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #8b3a1a;
+  margin-bottom: 20px;
+}
+
+/* ── 저장 버튼 영역 ── */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* ── 배지 ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.badge-navy { background: var(--navy); color: var(--white); }
+.badge-green { background: var(--green); color: var(--white); }
+.badge-gray { background: var(--gray-200); color: var(--gray-600); }
+
+/* ── 진행 상태 표시 ── */
+.status-saved {
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  gap: 5px;
+}
+.status-saved.show { display: flex; }
+
+/* ── 구분선 ── */
+hr.div { border: none; border-top: 1.5px solid var(--gray-200); margin: 22px 0; }
+
+/* ── 토스트 ── */
+#toast {
+  position: fixed;
+  bottom: 30px; right: 30px;
+  background: var(--navy);
+  color: var(--white);
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 9999;
+  box-shadow: var(--shadow-lg);
+}
+#toast.show { opacity: 1; }
+
+/* ── 반응형 ── */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .content { padding: 20px 16px 40px; }
+  .header { padding: 0 20px; }
+  .header-sub { display: none; }
+}
+
+/* ── 스크롤바 ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--gray-100); }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="header">
+  <span class="header-icon">🎯</span>
+  <span class="header-title">슬라이드 디자인 프롬프트 생성기</span>
+  <span class="header-sub">AI 기반 PowerPoint 자동화 도구</span>
+</header>
+
+<div class="layout">
+
+  <!-- ── 사이드바 ── -->
+  <aside class="sidebar">
+    <button class="step-nav-btn active" onclick="goStep(0)" id="nav0">
+      <span class="step-num">0</span>
+      <span>기본정보 입력</span>
+    </button>
+    <button class="step-nav-btn" onclick="goStep(1)" id="nav1">
+      <span class="step-num">1</span>
+      <span>디자인 프롬프트</span>
+    </button>
+    <button class="step-nav-btn" onclick="goStep(2)" id="nav2">
+      <span class="step-num">2</span>
+      <span>대본 추출 프롬프트</span>
+    </button>
+    <button class="step-nav-btn" onclick="goStep(3)" id="nav3">
+      <span class="step-num">3</span>
+      <span>최종 슬라이드 프롬프트</span>
+    </button>
+  </aside>
+
+  <!-- ── 콘텐츠 ── -->
+  <main class="content">
+
+    <!-- ════════════════════════════════════
+         STEP 0 : 기본정보 입력
+    ════════════════════════════════════ -->
+    <section class="step-section active" id="step0">
+      <div class="section-header">
+        <span class="section-icon">📋</span>
+        <span class="section-title">0단계 : 기본정보 입력</span>
+        <span class="section-desc">이후 모든 단계에 자동 반영됩니다</span>
+      </div>
+
+      <!-- 슬라이드 용도 -->
+      <div class="card">
+        <div class="card-title">🎯 슬라이드 용도 <span class="required">*</span></div>
+        <div class="check-group">
+          <label class="check-pill" id="pill-edu">
+            <input type="checkbox" id="chk-edu" onchange="pillToggle('pill-edu','chk-edu')">
+            <span class="pill-dot"></span> 📚 교육용
+          </label>
+          <label class="check-pill" id="pill-report">
+            <input type="checkbox" id="chk-report" onchange="pillToggle('pill-report','chk-report')">
+            <span class="pill-dot"></span> 📊 보고용
+          </label>
+          <label class="check-pill" id="pill-card">
+            <input type="checkbox" id="chk-card" onchange="pillToggle('pill-card','chk-card')">
+            <span class="pill-dot"></span> 📱 카드뉴스용
+          </label>
+        </div>
+      </div>
+
+      <!-- 청중 & 목적 -->
+      <div class="card">
+        <div class="card-title">👥 발표 대상 &amp; 목적</div>
+        <div class="row2">
+          <div class="field">
+            <label class="lbl">Target Audience <span style="font-size:12px;color:var(--gray-600)">(청중)</span></label>
+            <input type="text" id="audience" placeholder="예: 부서장, 직원, 학생, 담당자">
+          </div>
+          <div class="field">
+            <label class="lbl">Presentation Objective <span style="font-size:12px;color:var(--gray-600)">(발표목적)</span></label>
+            <input type="text" id="objective" placeholder="예: 보안교육, 임원보고, 신규사업 제안">
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label class="lbl">슬라이드 페이지 수 <span class="required">*</span></label>
+          <input type="number" id="pageCount" min="1" max="200" placeholder="예: 20" style="max-width:200px">
+        </div>
+      </div>
+
+      <!-- 실사사진 & 3D -->
+      <div class="card">
+        <div class="card-title">📷 실사사진 &amp; 3D 설정</div>
+        <div class="field">
+          <label class="lbl">실사사진을 넣을 슬라이드 번호</label>
+          <input type="text" id="photoSlides" placeholder="예: 2, 5, 8, 12  (쉼표로 구분)">
+          <div style="font-size:12px;color:var(--gray-600);margin-top:5px">입력하지 않으면 전체 슬라이드에 일러스트/아이콘이 적용됩니다.</div>
+        </div>
+        <div class="field">
+          <label class="lbl">실사사진 및 도형 3D 처리 여부</label>
+          <div class="check-group">
+            <label class="check-pill" id="pill-3d-all">
+              <input type="checkbox" id="chk-3d-all" onchange="pillToggle('pill-3d-all','chk-3d-all')">
+              <span class="pill-dot"></span> 🟦 전체 3D (실사+도형)
+            </label>
+            <label class="check-pill" id="pill-3d-photo">
+              <input type="checkbox" id="chk-3d-photo" onchange="pillToggle('pill-3d-photo','chk-3d-photo')">
+              <span class="pill-dot"></span> 📸 실사사진만 3D
+            </label>
+            <label class="check-pill" id="pill-3d-shape">
+              <input type="checkbox" id="chk-3d-shape" onchange="pillToggle('pill-3d-shape','chk-3d-shape')">
+              <span class="pill-dot"></span> 🔷 도형만 3D
+            </label>
+            <label class="check-pill" id="pill-3d-none">
+              <input type="checkbox" id="chk-3d-none" onchange="pillToggle('pill-3d-none','chk-3d-none')">
+              <span class="pill-dot"></span> ▱ Flat (3D 없음)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="saveStep0()">✅ 저장하고 1단계로 이동</button>
+        <span class="status-saved" id="saved0">✔ 저장완료</span>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════
+         STEP 1 : 디자인 프롬프트 추출
+    ════════════════════════════════════ -->
+    <section class="step-section" id="step1">
+      <div class="section-header">
+        <span class="section-icon">✨</span>
+        <span class="section-title">1단계 : 디자인 프롬프트 추출</span>
+        <span class="section-desc">레퍼런스 이미지 → 영문 프롬프트 자동 생성</span>
+      </div>
+
+      <div class="info-banner" id="step1-info">ℹ️ 0단계에서 기본정보를 먼저 저장해주세요.</div>
+
+      <!-- 이미지 업로드 -->
+      <div class="card">
+        <div class="card-title">🖼️ 레퍼런스 이미지 업로드 <span style="font-size:12px;font-weight:400;color:var(--gray-600)">(최대 20장, 장당 20MB)</span></div>
+
+        <div class="upload-zone" id="uploadZone"
+             onclick="document.getElementById('imgInput').click()"
+             ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
+          <div class="upload-zone-icon">📁</div>
+          <p>클릭하거나 이미지를 드래그 앤 드롭</p>
+          <small>PNG, JPG, WEBP, GIF 지원 · 최대 20장 · 장당 최대 20MB</small>
+          <input type="file" id="imgInput" accept="image/*" multiple style="display:none" onchange="addImages(event)">
+        </div>
+
+        <div class="img-grid" id="imgGrid"></div>
+        <div class="img-count" id="imgCount" style="display:none"></div>
+
+        <div class="action-row" style="margin-top:14px">
+          <button class="btn btn-ghost btn-sm" onclick="clearAllImages()">🗑️ 전체 삭제</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('imgInput').click()">➕ 이미지 추가</button>
+        </div>
+      </div>
+
+      <!-- 추출 버튼 -->
+      <div class="card">
+        <div class="card-title">🚀 디자인 프롬프트 추출</div>
+
+        <!-- 안내 배너 -->
+        <div style="background:#fff8f0;border-left:4px solid #ff6b35;border-radius:6px;padding:13px 16px;margin-bottom:18px;font-size:13px;color:#7a3a10;line-height:1.7">
+          <strong>💡 두 가지 생성 방식을 지원합니다</strong><br>
+          <b>① API 키 없이 즉시 생성 (권장)</b> — 0단계 입력값을 기반으로 로컬에서 바로 프롬프트를 생성합니다. 이미지가 업로드된 경우, 출력 프롬프트의 <code>BG/Text/Accent</code> 값을 이미지에서 직접 추출하여 교체해주세요.<br>
+          <b>② Anthropic API 키 입력 시</b> — 업로드된 이미지를 실제로 분석하여 색상 HEX 코드 등을 자동 추출합니다. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#000080">API 키 발급 →</a>
+        </div>
+
+        <!-- API 키 입력 (선택) -->
+        <div class="field" style="margin-bottom:16px">
+          <label class="lbl" style="font-size:13px;font-weight:600;color:var(--gray-600)">
+            🔑 Anthropic API Key <span style="font-weight:400">(선택 — 입력 시 이미지 분석 활성화)</span>
+          </label>
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." style="max-width:480px;font-family:monospace">
+          <div style="font-size:12px;color:var(--gray-400);margin-top:4px">API 키는 이 기기에만 저장되며 외부로 전송되지 않습니다.</div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="extractDesignPrompt()">✨ 디자인 프롬프트 추출</button>
+          <span style="font-size:13px;color:var(--gray-600)">API 키 없으면 로컬 자동 생성 · API 키 있으면 이미지 분석 생성</span>
+        </div>
+        <div class="spinner" id="spin1"></div>
+
+        <div id="result1Wrap" style="display:none">
+          <div class="code-wrap" style="margin-top:18px">
+            <div class="code-header">
+              <span>📄 영문 디자인 프롬프트 (Adaptive Presentation Design System)</span>
+              <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;cursor:pointer;font-family:inherit;" onclick="copyCode('designPromptCode')">📋 복사</button>
+            </div>
+            <div class="code-body" id="designPromptCode"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════
+         STEP 2 : 대본 추출 프롬프트
+    ════════════════════════════════════ -->
+    <section class="step-section" id="step2">
+      <div class="section-header">
+        <span class="section-icon">📝</span>
+        <span class="section-title">2단계 : 대본 추출 프롬프트</span>
+        <span class="section-desc">NotebookLM용 대본 생성 프롬프트 자동 생성</span>
+      </div>
+
+      <div class="info-banner" id="step2-info">ℹ️ 0단계 기본정보(Target Audience, Presentation Objective, 페이지 수)가 자동 반영됩니다.</div>
+
+      <div class="card">
+        <div class="card-title">📋 대본 추출 프롬프트 생성</div>
+        <p style="font-size:14px;color:var(--gray-600);margin-bottom:16px">
+          0단계에서 입력한 정보가 자동으로 프롬프트에 반영됩니다. 버튼을 클릭하여 생성하세요.
+        </p>
+        <button class="btn btn-primary" onclick="generateScriptPrompt()">📝 대본 추출 프롬프트 생성</button>
+
+        <div class="code-wrap" style="margin-top:18px">
+          <div class="code-header">
+            <span>📄 대본 추출 프롬프트</span>
+            <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;cursor:pointer;font-family:inherit;" onclick="copyCode('scriptPromptCode')">📋 복사</button>
+          </div>
+          <div class="code-body" id="scriptPromptCode"><span class="code-placeholder">버튼을 클릭하면 여기에 프롬프트가 생성됩니다.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════
+         STEP 3 : 최종 슬라이드 생성 프롬프트
+    ════════════════════════════════════ -->
+    <section class="step-section" id="step3">
+      <div class="section-header">
+        <span class="section-icon">🎬</span>
+        <span class="section-title">3단계 : 최종 슬라이드 생성 프롬프트</span>
+        <span class="section-desc">NotebookLM 실행 커맨드 자동 생성</span>
+      </div>
+
+      <div class="info-banner">ℹ️ 1단계에서 생성된 디자인 프롬프트와 0단계 페이지 수가 자동 반영됩니다.</div>
+
+      <div class="card">
+        <div class="card-title">⚙️ 최종 슬라이드 생성 프롬프트</div>
+
+        <div id="step3-mode-info" style="font-size:14px;color:var(--gray-600);margin-bottom:16px">
+          슬라이드 페이지 수에 따라 20페이지 이하/이상 버전이 자동 선택됩니다.
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="generateFinalPrompt()">🎬 최종 슬라이드 생성 프롬프트 생성</button>
+          <span id="final-mode-badge" style="display:none"></span>
+        </div>
+
+        <div class="code-wrap" style="margin-top:18px">
+          <div class="code-header">
+            <span>📄 최종 슬라이드 생성 프롬프트 (NotebookLM 실행 커맨드)</span>
+            <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;cursor:pointer;font-family:inherit;" onclick="copyCode('finalPromptCode')">📋 복사</button>
+          </div>
+          <div class="code-body" id="finalPromptCode"><span class="code-placeholder">버튼을 클릭하면 여기에 프롬프트가 생성됩니다.</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /layout -->
+
+<div id="toast">✅ 복사되었습니다!</div>
+
+<script>
+// ════════════════════════════════════════
+// 전역 상태
+// ════════════════════════════════════════
+
+const state = {
+  purpose: [],           // 교육용, 보고용, 카드뉴스용
+  audience: "",
+  objective: "",
+  pageCount: 0,
+  photoSlides: "",
+  threeDOptions: [],
+  step0saved: false,
+  images: [],            // {name, size, dataUrl, base64, mediaType}
+  designPrompt: "",      // 1단계 생성 결과
+};
+
+// ════════════════════════════════════════
+// 네비게이션
+// ════════════════════════════════════════
+function goStep(n) {
+  document.querySelectorAll('.step-section').forEach((s,i) => {
+    s.classList.toggle('active', i === n);
+  });
+  document.querySelectorAll('.step-nav-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === n);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ════════════════════════════════════════
+// 체크박스 필 토글
+// ════════════════════════════════════════
+function pillToggle(pillId, chkId) {
+  const pill = document.getElementById(pillId);
+  const chk  = document.getElementById(chkId);
+  pill.classList.toggle('on', chk.checked);
+}
+
+// ════════════════════════════════════════
+// STEP 0 저장
+// ════════════════════════════════════════
+function saveStep0() {
+  // 용도
+  state.purpose = [];
+  if (document.getElementById('chk-edu').checked)    state.purpose.push('교육용');
+  if (document.getElementById('chk-report').checked) state.purpose.push('보고용');
+  if (document.getElementById('chk-card').checked)   state.purpose.push('카드뉴스용');
+
+  state.audience   = document.getElementById('audience').value.trim();
+  state.objective  = document.getElementById('objective').value.trim();
+  state.pageCount  = parseInt(document.getElementById('pageCount').value) || 0;
+  state.photoSlides = document.getElementById('photoSlides').value.trim();
+
+  // 3D
+  state.threeDOptions = [];
+  if (document.getElementById('chk-3d-all').checked)   state.threeDOptions.push('실사사진 및 도형 모두 3D');
+  if (document.getElementById('chk-3d-photo').checked) state.threeDOptions.push('실사사진만 3D');
+  if (document.getElementById('chk-3d-shape').checked) state.threeDOptions.push('도형만 3D');
+  if (document.getElementById('chk-3d-none').checked)  state.threeDOptions.push('Flat(3D 없음)');
+
+  if (state.purpose.length === 0) {
+    showToast('❗ 슬라이드 용도를 1개 이상 선택해주세요.'); return;
+  }
+  if (!state.pageCount) {
+    showToast('❗ 슬라이드 페이지 수를 입력해주세요.'); return;
+  }
+
+  state.step0saved = true;
+
+  // 사이드바 done 표시
+  document.getElementById('nav0').classList.add('done');
+
+  // 1단계 info 업데이트
+  const purposeStr = state.purpose.join(', ');
+  const photoStr   = state.photoSlides || '없음';
+  const tdStr      = state.threeDOptions.length ? state.threeDOptions.join(', ') : 'Flat(3D없음)';
+  document.getElementById('step1-info').innerHTML =
+    `✅ <strong>기본정보 적용됨</strong> | 용도: <b>${purposeStr}</b> | 청중: <b>${state.audience||'미입력'}</b> | 목적: <b>${state.objective||'미입력'}</b> | 페이지: <b>${state.pageCount}</b> | 실사사진: <b>${photoStr}</b> | 3D: <b>${tdStr}</b>`;
+
+  document.getElementById('step2-info').innerHTML =
+    `✅ Target Audience: <b>${state.audience||'미입력'}</b> | Presentation Objective: <b>${state.objective||'미입력'}</b> | 페이지 수: <b>${state.pageCount}</b>`;
+
+  const s0 = document.getElementById('saved0');
+  s0.classList.add('show');
+  setTimeout(()=>s0.classList.remove('show'), 2500);
+
+  showToast('기본정보가 저장되었습니다!');
+  setTimeout(() => goStep(1), 700);
+}
+
+// ════════════════════════════════════════
+// 이미지 업로드 처리
+// ════════════════════════════════════════
+function dragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag-over'); }
+function dragLeave(e) { document.getElementById('uploadZone').classList.remove('drag-over'); }
+function dropFiles(e) {
+  e.preventDefault();
+  dragLeave(e);
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  processImageFiles(files);
+}
+
+function addImages(e) {
+  const files = Array.from(e.target.files);
+  processImageFiles(files);
+  e.target.value = '';
+}
+
+function processImageFiles(files) {
+  const remaining = 20 - state.images.length;
+  if (remaining <= 0) { showToast('❗ 최대 20장까지 업로드 가능합니다.'); return; }
+  const toAdd = files.slice(0, remaining);
+  toAdd.forEach(f => {
+    if (f.size > 20 * 1024 * 1024) { showToast(`❗ ${f.name}: 20MB 초과`); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      const base64  = dataUrl.split(',')[1];
+      const media   = f.type;
+      state.images.push({ name: f.name, size: f.size, dataUrl, base64, mediaType: media });
+      renderImageGrid();
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function renderImageGrid() {
+  const grid  = document.getElementById('imgGrid');
+  const count = document.getElementById('imgCount');
+  grid.innerHTML = '';
+  state.images.forEach((img, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'img-thumb';
+    thumb.innerHTML = `<img src="${img.dataUrl}" alt="${img.name}">
+      <button class="img-thumb-del" onclick="removeImage(${i})" title="삭제">✕</button>`;
+    grid.appendChild(thumb);
+  });
+  count.style.display = state.images.length ? 'block' : 'none';
+  count.textContent = `${state.images.length} / 20장 업로드됨`;
+}
+
+function removeImage(i) {
+  state.images.splice(i, 1);
+  renderImageGrid();
+}
+
+function clearAllImages() {
+  if (state.images.length === 0) return;
+  if (!confirm('업로드된 이미지를 모두 삭제할까요?')) return;
+  state.images = [];
+  renderImageGrid();
+}
+
+// ════════════════════════════════════════
+// STEP 1 : 디자인 프롬프트 추출 (로컬 생성 + API 선택)
+// ════════════════════════════════════════
+function extractDesignPrompt() {
+  if (!state.step0saved) {
+    showToast('❗ 먼저 0단계 기본정보를 저장해주세요.'); return;
+  }
+
+  const apiKey = document.getElementById('apiKeyInput')
+                  ? document.getElementById('apiKeyInput').value.trim() : '';
+
+  if (apiKey) {
+    extractWithAPI(apiKey);
+  } else {
+    extractLocally();
+  }
+}
+
+// ── 로컬 직접 생성 ──
+function extractLocally() {
+  const purposeStr = state.purpose.join(', ') || '미지정';
+  const photoStr   = state.photoSlides || '없음';
+  const tdStr      = state.threeDOptions.length ? state.threeDOptions.join(', ') : 'Flat(3D 없음)';
+  const isReport   = state.purpose.includes('보고용');
+  const isEdu      = state.purpose.includes('교육용');
+  const isCard     = state.purpose.includes('카드뉴스용');
+  const imgCount   = state.images.length;
+
+  // 배경색 결정
+  let bgHex = '#F0F4FF'; // 기본 연한 파랑
+  let bgDesc = 'Light blue-gray pastel';
+  if (isReport)      { bgHex = '#FFFFFF'; bgDesc = 'Pure white (mandatory for 보고용)'; }
+  else if (isEdu)    { bgHex = '#F5F8FF'; bgDesc = 'Light pastel blue for readability'; }
+  else if (isCard)   { bgHex = '#1A1A2E'; bgDesc = 'Deep navy for card news impact'; }
+
+  // 3D 설정 라인
+  const tdLine = tdStr !== 'Flat(3D 없음)'
+    ? `\n   - 3D: ${tdStr} — apply perspective shadows, depth layers per element`
+    : '\n   - Rendering: Flat design, clean vector shapes';
+
+  // 실사사진 라인
+  const photoLine = photoStr !== '없음'
+    ? `\n   - Real photo slides: [${photoStr}] — full-bleed or half-split layout`
+    : '';
+
+  // 이미지 분석 메모
+  const imgNote = imgCount > 0
+    ? `\n   - Reference: ${imgCount} image(s) uploaded — extract dominant hex from images manually and replace BG/Text/Accent below`
+    : '\n   - Reference: No image uploaded — default palette applied';
+
+  const prompt =
+`[Adaptive Presentation Design System]
+
+1. Visual Identity
+   Theme: ${purposeStr} Presentation — ${isReport?'Corporate Report':''}${isEdu?'Educational':''}${isCard?'Card News':''}
+   BG: ${bgHex} | Text: ${isCard?'#FFFFFF':'#111111'} | Accent: #000080
+   ${bgDesc}
+   Governing Msg: Margin-top:3cm | 40pt, Malgun Gothic, Bold | NO underline — insert thin horizontal line shape below
+   Head Msg: Below Governing+1cm gap | 28pt, Malgun Gothic, Regular
+   Highlight Box: Margin-bottom:3cm | BG:#000080 | Text:#FFFFFF | 24pt, Bold
+   Color Palette: BG:${bgHex} | Text:${isCard?'#FFFFFF':'#111111'} | Accent:#000080${imgNote}${photoLine}${tdLine}
+
+2. Dynamic Layout Rules
+   TypeA (Impact/Title): Full-width heading, large 40pt+ type, minimal elements, centered or left-aligned
+   TypeB (Content/Body): 2-col or bullet grid, 28pt title, 18pt body, left margin 2cm, line-height 1.5
+   TypeC (Data/Metrics): Chart zone 60% width, KPI highlight boxes, data labels 16pt bold
+   TypeD (Structure/Diagram): Split-view 50/50 or 40/60, process arrows, comparison tables
+
+3. Execution
+   Slides: ${state.pageCount} total | Audience: ${state.audience||'General'} | Objective: ${state.objective||'Presentation'}
+   Assign TypeA→cover/section breaks | TypeB→body content | TypeC→data slides | TypeD→process/compare
+   Strictly follow slide count(${state.pageCount}) and content boundaries from main JSON prompt
+   Single color mode enforced — no light/dark mode mixing`;
+
+  state.designPrompt = prompt;
+  document.getElementById('designPromptCode').textContent = prompt;
+  document.getElementById('result1Wrap').style.display = 'block';
+  document.getElementById('nav1').classList.add('done');
+
+  if (imgCount > 0) {
+    showToast('✅ 프롬프트 생성 완료! 이미지 HEX는 직접 추출 후 교체하세요.');
+  } else {
+    showToast('✅ 디자인 프롬프트가 생성되었습니다!');
+  }
+}
+
+// ── API 키로 생성 (선택 사항) ──
+async function extractWithAPI(apiKey) {
+  const purposeStr = state.purpose.join(', ') || '미지정';
+  const photoStr   = state.photoSlides || '없음';
+  const tdStr      = state.threeDOptions.length ? state.threeDOptions.join(', ') : 'Flat(3D 없음)';
+  const isReport   = state.purpose.includes('보고용');
+  const isEdu      = state.purpose.includes('교육용');
+
+  const bgRule = isReport ? 'Background: Pure white #FFFFFF mandatory.'
+    : isEdu ? 'Background: Light pastel tone.' : 'Background: dominant color from image.';
+
+  const userContent = [];
+  state.images.forEach(img => {
+    userContent.push({ type:'image', source:{ type:'base64', media_type:img.mediaType, data:img.base64 }});
+  });
+  userContent.push({ type:'text', text:
+`Generate [Adaptive Presentation Design System] English prompt. Max 800 chars. No emojis. Structured only.
+Purpose:${purposeStr} | Audience:${state.audience||'General'} | Slides:${state.pageCount} | Photos:${photoStr} | 3D:${tdStr}
+${bgRule}
+Structure: 1.Visual Identity(Theme,BG/Text/Accent hex,GoverningMsg:margin-top3cm|40pt Malgun Gothic Bold|NO underline use thin line shape,HeadMsg:28pt|1cm below Governing,HighlightBox:BG#000080 Text#FFFFFF 24pt Bold margin-bottom3cm,ColorPalette:1BG 1Text 1Accent)
+2.Dynamic Layout(TypeA Impact/Title,TypeB Content/Body,TypeC Data/Metrics,TypeD Structure/Diagram)
+3.Execution(follow slide count ${state.pageCount},assign TypeA-D by section logic)` });
+
+  document.getElementById('spin1').style.display = 'block';
+  document.getElementById('result1Wrap').style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{ role:'user', content:userContent }]
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    let text = data.content.map(b=>b.text||'').join('\n').trim();
+    text = text.replace(/```[a-z]*\n?/gi,'').replace(/```/g,'').trim();
+    state.designPrompt = text;
+    document.getElementById('designPromptCode').textContent = text;
+    document.getElementById('result1Wrap').style.display = 'block';
+    document.getElementById('nav1').classList.add('done');
+    showToast('✅ API로 디자인 프롬프트가 생성되었습니다!');
+  } catch(err) {
+    showToast('⚠️ API 오류 — 로컬 생성으로 전환합니다.');
+    extractLocally();
+  } finally {
+    document.getElementById('spin1').style.display = 'none';
+  }
+}
+
+// ════════════════════════════════════════
+// STEP 2 : 대본 추출 프롬프트 생성
+// ════════════════════════════════════════
+function generateScriptPrompt() {
+  const pages    = state.pageCount || '(페이지 수 미입력)';
+  const audience = state.audience  || '(Target Audience 미입력)';
+  const obj      = state.objective || '(Presentation Objective 미입력)';
+
+  const prompt = `# Role: Chief Content Architect
+Task: Analyze ALL uploaded sources and generate a consistent ${pages} page [Master Script Report].
+
+## [Variables: Please Fill Below]
+- Target Audience: ${audience}
+- Presentation Objective: ${obj}
+
+## Instruction Guidelines
+1. 업로드된 모든 소스 문서의 핵심 팩트와 데이터를 통합하여 논리적 흐름(서론-본론-결론)을 구축하라.
+2. 지정된 [Target Audience]의 수준과 관심사에 맞춘 전문적인 용어와 설득력 있는 문체를 사용하라.
+
+## Output Format (Strictly Follow)
+슬라이드 번호: (1~${pages})
+제목: (해당 페이지의 핵심 헤드라인)
+화면 텍스트: (핵심 데이터 및 키워드 3~4줄 요약)
+상세 대본: (발표자가 읽을 구어체 설명 3~5줄)`;
+
+  document.getElementById('scriptPromptCode').textContent = prompt;
+  document.getElementById('nav2').classList.add('done');
+  showToast('대본 추출 프롬프트가 생성되었습니다!');
+}
+
+// ════════════════════════════════════════
+// STEP 3 : 최종 슬라이드 생성 프롬프트
+// ════════════════════════════════════════
+function generateFinalPrompt() {
+  const pages  = state.pageCount || 20;
+  const design = state.designPrompt ||
+    '<<<여기에 1단계에서 생성된 영문 디자인 프롬프트를 붙여넣으세요>>>';
+
+  const badge = document.getElementById('final-mode-badge');
+  let prompt = '';
+
+  if (pages >= 20) {
+    // 20페이지 이상
+    const half1end = Math.ceil(pages / 2);
+    const half2start = half1end + 1;
+    badge.innerHTML = `<span class="badge badge-navy">20페이지 이상 — 2-Function 분할 모드</span>`;
+    badge.style.display = 'inline';
+
+    prompt = `[SYSTEM KERNEL OVERRIDE]
+Role: API Execution Terminal
+Task: Execute the following algorithmic sequence STRICTLY. Do not summarize, do not combine, do not output conversational text.
+
+## [Global Design System]
+${design}
+
+## EXECUTION_SCRIPT_RUN()
+WARNING: Merging ${pages} slides into a single API call causes a FATAL_MEMORY_CRASH. You MUST execute the two functions below sequentially and independently.
+
+FUNCTION_01_CALL_STUDIO() {
+  target_data: "Source Script Slides 1 to ${half1end}"
+  deck_type: "presentation"
+  length: "dynamic"
+  user_steering_prompt: "
+    1. Apply [Global Design System] exactly.
+    2. Match Source content 1:1.
+    3. RULE: DO NOT generate any ending/thank you slide at slide ${half1end}. End with body content.
+  "
+}
+
+// WAIT FOR FUNCTION_01 TO INITIATE, THEN IMMEDIATELY EXECUTE FUNCTION_02
+
+FUNCTION_02_CALL_STUDIO() {
+  target_data: "Source Script Slides ${half2start} to ${pages}"
+  deck_type: "presentation"
+  length: "dynamic"
+  user_steering_prompt: "
+    1. Apply [Global Design System] exactly.
+    2. Match Source content 1:1.
+    3. RULE: DO NOT generate a cover or title slide. Start immediately with slide ${half2start} body content. Place the ONLY ending slide at slide ${pages}.
+  "
+}`;
+  } else {
+    // 20페이지 미만
+    badge.innerHTML = `<span class="badge badge-green">20페이지 이하 — Single Function 모드</span>`;
+    badge.style.display = 'inline';
+
+    prompt = `[SYSTEM KERNEL OVERRIDE]
+Role: API Execution Terminal
+Task: Execute the following algorithmic sequence STRICTLY. Do not summarize, do not combine, do not output conversational text.
+
+## [Global Design System]
+${design}
+
+## EXECUTION_SCRIPT_RUN()
+
+FUNCTION_01_CALL_STUDIO() {
+  target_data: "Source Script Slides 1 to ${pages}"
+  deck_type: "presentation"
+  length: "dynamic"
+  user_steering_prompt: "
+    1. Apply [Global Design System] exactly.
+    2. Match Source content 1:1.
+  "
+}`;
+  }
+
+  document.getElementById('finalPromptCode').textContent = prompt;
+  document.getElementById('nav3').classList.add('done');
+  showToast('최종 슬라이드 생성 프롬프트가 생성되었습니다!');
+}
+
+// ════════════════════════════════════════
+// 유틸리티
+// ════════════════════════════════════════
+function copyCode(id) {
+  const text = document.getElementById(id).textContent;
+  if (!text || text.includes('버튼을 클릭하면')) {
+    showToast('❗ 먼저 프롬프트를 생성해주세요.'); return;
+  }
+  navigator.clipboard.writeText(text).then(() => showToast('클립보드에 복사되었습니다!'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+</script>
+</body>
+</html>
