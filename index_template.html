@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>브리핑 한마디</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f1;
+    --surface: #ffffff;
+    --surface-line: #e9e2d6;
+    --text: #2b2621;
+    --text-muted: #83786a;
+    --text-faint: #a89d8d;
+
+    --mint-bg: #e2f0e7;      --mint-strong: #2f7a55;
+    --peach-bg: #fbe9db;     --peach-strong: #c1600c;
+    --lav-bg:   #ece2f9;     --lav-strong:   #6b3fa0;
+    --blue-bg:  #e1edfa;     --blue-strong:  #1a5fa8;
+    --mustard-bg: #faf2d2;   --mustard-strong: #8a7100;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 18px 90px;
+  }
+  main { width: 100%; max-width: 600px; }
+  header { margin-bottom: 26px; }
+  .eyebrow { font-size: 13.5px; font-weight: 500; color: var(--text-faint); margin: 0 0 6px; }
+  h1 { font-family: "Noto Serif KR", serif; font-weight: 700; font-size: clamp(24px, 6vw, 30px); margin: 0 0 8px; }
+  header p { margin: 0; color: var(--text-muted); font-size: 15px; line-height: 1.6; max-width: 48ch; }
+
+  .card { background: var(--surface); border: 1px solid var(--surface-line); border-radius: 16px; padding: 20px 20px 18px; margin-bottom: 16px; }
+  .card-label { font-weight: 700; font-size: 18px; margin: 0 0 12px; }
+  .card.mint    .card-label { color: var(--mint-strong); }
+  .card.peach   .card-label { color: var(--peach-strong); }
+  .card.lav     .card-label { color: var(--lav-strong); }
+  .card.blue    .card-label { color: var(--blue-strong); }
+  .card.mustard .card-label { color: var(--mustard-strong); }
+
+  .content { border-radius: 10px; padding: 13px 15px; font-size: 15px; line-height: 1.6; margin-bottom: 12px; }
+  .card.mint    .content { background: var(--mint-bg); }
+  .card.peach   .content { background: var(--peach-bg); }
+  .card.lav     .content { background: var(--lav-bg); }
+  .card.blue    .content { background: var(--blue-bg); }
+  .card.mustard .content { background: var(--mustard-bg); }
+  .content strong { font-weight: 700; }
+
+  .opinion-tag { font-size: 12.5px; color: var(--text-faint); display: block; margin-bottom: 4px; }
+  input[type="text"] {
+    width: 100%; border: none; border-bottom: 1.5px solid var(--surface-line);
+    background: transparent; color: var(--text); font-family: inherit; font-size: 15px;
+    padding: 5px 2px 7px; outline: none;
+  }
+  input[type="text"]:focus { border-bottom-color: var(--text); }
+
+  .save-bar {
+    position: sticky; bottom: 14px;
+    margin-top: 22px; text-align: center;
+  }
+  #saveBtn {
+    appearance: none; border: none; cursor: pointer;
+    background: #24292f; color: #fff; font-family: inherit;
+    font-size: 16px; font-weight: 700; padding: 14px 28px; border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  }
+  #saveBtn:active { transform: translateY(1px); }
+  .save-hint { margin-top: 10px; font-size: 13px; color: var(--text-faint); line-height: 1.6; }
+  footer { margin-top: 10px; color: var(--text-faint); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow" id="dateLabel">__DATE_LABEL__</p>
+    <h1>오늘 내용, 어떠셨어요?</h1>
+    <p>각 항목을 읽고 아래 칸에 짧게 의견을 남긴 뒤, 맨 아래 "깃허브에 저장하기"를 눌러주세요.</p>
+  </header>
+
+  <div class="card mint">
+    <p class="card-label">📈 재테크</p>
+    <div class="content" data-content="재테크">__FINANCE__</div>
+    <span class="opinion-tag">내 의견</span>
+    <input type="text" data-topic="재테크" placeholder="예: 코스닥 급락 이유 더 자세히 알고 싶어" />
+  </div>
+
+  <div class="card peach">
+    <p class="card-label">💪 건강</p>
+    <div class="content" data-content="건강">__HEALTH__</div>
+    <span class="opinion-tag">내 의견</span>
+    <input type="text" data-topic="건강" placeholder="예: 스트레칭 루틴도 같이 알려줘" />
+  </div>
+
+  <div class="card lav">
+    <p class="card-label">📖 소설쓰기</p>
+    <div class="content" data-content="소설쓰기">__NOVEL__</div>
+    <span class="opinion-tag">내 의견</span>
+    <input type="text" data-topic="소설쓰기" placeholder="예: 다른 시점의 로그라인도 보여줘" />
+  </div>
+
+  <div class="card blue">
+    <p class="card-label">🗣 영어공부</p>
+    <div class="content" data-content="영어공부">__ENGLISH__</div>
+    <span class="opinion-tag">내 의견</span>
+    <input type="text" data-topic="영어공부" placeholder="예: 실전 회화 예문도 하나씩 넣어줘" />
+  </div>
+
+  <div class="card mustard">
+    <p class="card-label">🤖 AI활용</p>
+    <div class="content" data-content="AI활용">__AI__</div>
+    <span class="opinion-tag">내 의견</span>
+    <input type="text" data-topic="AI활용" placeholder="예: 더 실행하기 쉬운 아이디어로 알려줘" />
+  </div>
+
+  <div class="save-bar">
+    <button id="saveBtn">🐙 깃허브에 저장하기</button>
+    <p class="save-hint">누르면 깃허브의 "새 파일 만들기" 화면으로 이동해요.<br>내용을 확인하고 초록색 <b>Commit changes</b> 버튼만 눌러주시면 저장 완료!</p>
+  </div>
+
+  <footer>저장 위치: honawdo-2026/Year 저장소의 feedback 폴더</footer>
+</main>
+
+<script>
+  var REPO = "honawdo-2026/Year";
+  var BRANCH = "main";
+  var TODAY_ISO = "__TODAY_ISO__";
+
+  document.getElementById("saveBtn").addEventListener("click", function () {
+    var lines = ["# " + TODAY_ISO + " 브리핑 피드백", ""];
+    document.querySelectorAll(".card").forEach(function (card) {
+      var label = card.querySelector(".card-label").textContent.trim();
+      var input = card.querySelector("input[data-topic]");
+      var opinion = input.value.trim();
+      lines.push("## " + label);
+      lines.push("");
+      lines.push("**내 의견:** " + (opinion || "_(없음)_"));
+      lines.push("");
+    });
+    var content = lines.join("\n");
+    var now = new Date();
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    var stamp = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+    var filename = "feedback/" + TODAY_ISO + "_" + stamp + ".md";
+    var url = "https://github.com/" + REPO + "/new/" + BRANCH
+      + "?filename=" + encodeURIComponent(filename)
+      + "&value=" + encodeURIComponent(content);
+    window.location.href = url;
+  });
+</script>
+</body>
+</html>
