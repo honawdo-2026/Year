@@ -75,24 +75,6 @@
   #saveBtn:active { transform: translateY(1px); }
   .save-hint { margin-top: 10px; font-size: 13px; color: var(--text-faint); line-height: 1.6; }
   footer { margin-top: 10px; color: var(--text-faint); font-size: 13px; text-align: center; }
-
-  #saveResult { text-align: left; }
-  #feedbackText {
-    width: 100%; box-sizing: border-box; resize: vertical;
-    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 12.5px; line-height: 1.5;
-    padding: 12px; border-radius: 10px; border: 1px solid var(--surface-line);
-    background: #fff; color: var(--text);
-  }
-  .save-actions { margin-top: 10px; text-align: center; }
-  #copyBtn {
-    appearance: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 14px;
-    background: var(--surface); color: var(--text); border: 1.5px solid var(--surface-line);
-    padding: 10px 18px; border-radius: 999px; margin-right: 8px;
-  }
-  #uploadLink {
-    display: inline-block; font-weight: 700; font-size: 14px; text-decoration: none;
-    background: #24292f; color: #fff; padding: 10px 18px; border-radius: 999px;
-  }
 </style>
 </head>
 <body>
@@ -139,15 +121,8 @@
   </div>
 
   <div class="save-bar">
-    <button id="saveBtn">🐙 오늘 피드백 만들기</button>
-    <p class="save-hint">누르면 아래에 오늘 브리핑 원본 전체 + 내 의견이 합쳐진 내용이 나와요.<br>"복사하기" → "깃허브에 새로 저장하기" 클릭 → 편집창에 붙여넣고 <b>Commit changes</b>!</p>
-    <div id="saveResult" style="display:none;">
-      <textarea id="feedbackText" rows="12" readonly></textarea>
-      <div class="save-actions">
-        <button id="copyBtn" type="button">📋 복사하기</button>
-        <a id="uploadLink" href="#" target="_blank">📤 깃허브에 새로 저장하기</a>
-      </div>
-    </div>
+    <button id="saveBtn">🐙 깃허브에 저장하기</button>
+    <p class="save-hint">의견을 남긴 항목만 원본과 함께 저장돼요.<br>누르면 깃허브 화면으로 바로 이동 — 초록색 <b>Commit changes</b> 버튼만 누르면 끝!</p>
   </div>
 
   <footer>저장 위치: honawdo-2026/Year 저장소의 feedback 폴더</footer>
@@ -158,57 +133,60 @@
   var BRANCH = "main";
   var TODAY_ISO = "__TODAY_ISO__";
 
-  // 주제별 "원본 내용 전체 + 내 의견"을 합친 마크다운을 만든다.
-  // (원본 전체를 깃허브 URL에 직접 실어 보내면 URL이 너무 길어져 깃허브가 오류를 내기 때문에,
-  //  여기서는 화면에 내용을 보여주고 사용자가 복사 → 붙여넣기로 저장하는 방식을 쓴다.)
+  // 의견을 남긴 항목만 "원본 전체 + 내 의견"으로 담는다. (의견 없는 항목은 어차피 볼 이유가
+  // 없으니 제외 — 이렇게 하면 보통은 내용이 짧아서 URL 한 번으로 바로 깃허브까지 이동 가능)
   function buildFeedback() {
     var lines = ["# " + TODAY_ISO + " 브리핑 피드백", ""];
+    var any = false;
     document.querySelectorAll(".card").forEach(function (card) {
-      var label = card.querySelector(".card-label").textContent.trim();
       var input = card.querySelector("input[data-topic]");
       var opinion = input.value.trim();
+      if (!opinion) return;
+      any = true;
+      var label = card.querySelector(".card-label").textContent.trim();
       var raw = card.querySelector(".content").textContent.trim().replace(/\s+/g, " ");
       lines.push("## " + label);
       lines.push("");
       lines.push(raw);
       lines.push("");
-      lines.push("**내 의견:** " + (opinion || "_(없음)_"));
+      lines.push("**내 의견:** " + opinion);
       lines.push("");
     });
-    return lines.join("\n");
+    return any ? lines.join("\n") : null;
   }
 
   document.getElementById("saveBtn").addEventListener("click", function () {
+    var content = buildFeedback();
+    if (!content) {
+      alert("먼저 하나 이상의 항목에 의견을 남겨주세요!");
+      return;
+    }
     var now = new Date();
     var pad = function (n) { return String(n).padStart(2, "0"); };
     var stamp = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
     var filename = "feedback/" + TODAY_ISO + "_" + stamp + ".md";
 
-    document.getElementById("feedbackText").value = buildFeedback();
-    document.getElementById("saveResult").style.display = "block";
-    document.getElementById("uploadLink").href =
-      "https://github.com/" + REPO + "/new/" + BRANCH + "?filename=" + encodeURIComponent(filename);
-    document.getElementById("saveResult").scrollIntoView({ behavior: "smooth", block: "nearest" });
-  });
-
-  document.getElementById("copyBtn").addEventListener("click", function () {
-    var ta = document.getElementById("feedbackText");
-    ta.focus();
-    ta.select();
-    ta.setSelectionRange(0, 999999);
-    var ok = false;
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(ta.value);
-        ok = true;
-      }
-    } catch (e) {}
-    if (!ok) {
-      try { ok = document.execCommand("copy"); } catch (e) {}
+    function makeUrl(c) {
+      return "https://github.com/" + REPO + "/new/" + BRANCH
+        + "?filename=" + encodeURIComponent(filename)
+        + "&value=" + encodeURIComponent(c);
     }
-    var btn = this;
-    btn.textContent = ok ? "✅ 복사됨!" : "복사 실패 - 직접 선택해 복사해주세요";
-    setTimeout(function () { btn.textContent = "📋 복사하기"; }, 2000);
+
+    // 의견을 아주 길게 여러 항목에 남겨서 혹시라도 URL이 너무 길어지면(6000자 초과),
+    // 원본 없이 의견만 담은 안전한 버전으로 자동 대체.
+    var url = makeUrl(content);
+    if (url.length > 6000) {
+      var lines = ["# " + TODAY_ISO + " 브리핑 피드백 (내용 길어서 원본 생략)", ""];
+      document.querySelectorAll(".card").forEach(function (card) {
+        var input = card.querySelector("input[data-topic]");
+        var opinion = input.value.trim();
+        if (!opinion) return;
+        var label = card.querySelector(".card-label").textContent.trim();
+        lines.push("## " + label, "", "**내 의견:** " + opinion, "");
+      });
+      url = makeUrl(lines.join("\n"));
+    }
+    window.location.href = url;
   });
 </script>
 </body>
