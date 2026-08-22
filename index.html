@@ -157,8 +157,6 @@
       var opinion = input.value.trim();
       lines.push("## " + label);
       lines.push("");
-      lines.push(card.querySelector(".content").textContent.trim().replace(/\s+/g, " "));
-      lines.push("");
       lines.push("**내 의견:** " + (opinion || "_(없음)_"));
       lines.push("");
     });
