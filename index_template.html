@@ -133,7 +133,7 @@
   var BRANCH = "main";
   var TODAY_ISO = "__TODAY_ISO__";
 
-  document.getElementById("saveBtn").addEventListener("click", function () {
+  function buildFeedback(includeSnippet) {
     var lines = ["# " + TODAY_ISO + " 브리핑 피드백", ""];
     document.querySelectorAll(".card").forEach(function (card) {
       var label = card.querySelector(".card-label").textContent.trim();
@@ -141,17 +141,37 @@
       var opinion = input.value.trim();
       lines.push("## " + label);
       lines.push("");
+      if (includeSnippet) {
+        var raw = card.querySelector(".content").textContent.trim().replace(/\s+/g, " ");
+        var snippet = raw.length > 50 ? raw.slice(0, 50) + "…" : raw;
+        lines.push("> " + snippet);
+        lines.push("");
+      }
       lines.push("**내 의견:** " + (opinion || "_(없음)_"));
       lines.push("");
     });
-    var content = lines.join("\n");
+    return lines.join("\n");
+  }
+
+  document.getElementById("saveBtn").addEventListener("click", function () {
     var now = new Date();
     var pad = function (n) { return String(n).padStart(2, "0"); };
     var stamp = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
     var filename = "feedback/" + TODAY_ISO + "_" + stamp + ".md";
-    var url = "https://github.com/" + REPO + "/new/" + BRANCH
-      + "?filename=" + encodeURIComponent(filename)
-      + "&value=" + encodeURIComponent(content);
+
+    function makeUrl(content) {
+      return "https://github.com/" + REPO + "/new/" + BRANCH
+        + "?filename=" + encodeURIComponent(filename)
+        + "&value=" + encodeURIComponent(content);
+    }
+
+    // 평소엔 각 주제 내용 요약(50자)을 함께 저장해서 나중에 봐도 무슨 얘기였는지 알 수 있게 함.
+    // 의견을 아주 길게 썼을 때 등 URL이 너무 길어지면(6000자 초과) 깃허브가 오류를 내므로
+    // 그럴 땐 자동으로 요약 없이(의견만) 안전하게 저장하는 버전으로 대체.
+    var url = makeUrl(buildFeedback(true));
+    if (url.length > 6000) {
+      url = makeUrl(buildFeedback(false));
+    }
     window.location.href = url;
   });
 </script>
