@@ -75,6 +75,24 @@
   #saveBtn:active { transform: translateY(1px); }
   .save-hint { margin-top: 10px; font-size: 13px; color: var(--text-faint); line-height: 1.6; }
   footer { margin-top: 10px; color: var(--text-faint); font-size: 13px; text-align: center; }
+
+  #saveResult { text-align: left; }
+  #feedbackText {
+    width: 100%; box-sizing: border-box; resize: vertical;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 12.5px; line-height: 1.5;
+    padding: 12px; border-radius: 10px; border: 1px solid var(--surface-line);
+    background: #fff; color: var(--text);
+  }
+  .save-actions { margin-top: 10px; text-align: center; }
+  #copyBtn {
+    appearance: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 14px;
+    background: var(--surface); color: var(--text); border: 1.5px solid var(--surface-line);
+    padding: 10px 18px; border-radius: 999px; margin-right: 8px;
+  }
+  #uploadLink {
+    display: inline-block; font-weight: 700; font-size: 14px; text-decoration: none;
+    background: #24292f; color: #fff; padding: 10px 18px; border-radius: 999px;
+  }
 </style>
 </head>
 <body>
@@ -87,7 +105,7 @@
 
   <div class="card mint">
     <p class="card-label">📈 재테크</p>
-    <div class="content" data-content="재테크">코스피 <strong>6,912.95</strong>(+1.46%(상승)), 코스닥 <strong>801.94</strong>(-6.90%(하락))로 마감했어요. 미국 증시는 다우 -0.85%(하락), S&P500 -1.43%(하락), 나스닥 -2.05%(하락)을 기록했어요. 비트코인은 <strong>$76,976</strong>(24시간 -0.31%(하락))예요. 원/달러 환율은 <strong>1,383.9원</strong>이에요.</div>
+    <div class="content" data-content="재테크">코스피 <strong>6,912.95</strong>(+1.46%(상승)), 코스닥 <strong>801.94</strong>(-6.90%(하락))로 마감했어요. 미국 증시는 다우 -0.85%(하락), S&P500 -1.43%(하락), 나스닥 -2.05%(하락)을 기록했어요. 비트코인은 <strong>$76,947</strong>(24시간 -0.49%(하락))예요. 원/달러 환율은 <strong>1,383.9원</strong>이에요.</div>
     <span class="opinion-tag">내 의견</span>
     <input type="text" data-topic="재테크" placeholder="예: 코스닥 급락 이유 더 자세히 알고 싶어" />
   </div>
@@ -121,8 +139,15 @@
   </div>
 
   <div class="save-bar">
-    <button id="saveBtn">🐙 깃허브에 저장하기</button>
-    <p class="save-hint">누르면 깃허브의 "새 파일 만들기" 화면으로 이동해요.<br>내용을 확인하고 초록색 <b>Commit changes</b> 버튼만 눌러주시면 저장 완료!</p>
+    <button id="saveBtn">🐙 오늘 피드백 만들기</button>
+    <p class="save-hint">누르면 아래에 오늘 브리핑 원본 전체 + 내 의견이 합쳐진 내용이 나와요.<br>"복사하기" → "깃허브에 새로 저장하기" 클릭 → 편집창에 붙여넣고 <b>Commit changes</b>!</p>
+    <div id="saveResult" style="display:none;">
+      <textarea id="feedbackText" rows="12" readonly></textarea>
+      <div class="save-actions">
+        <button id="copyBtn" type="button">📋 복사하기</button>
+        <a id="uploadLink" href="#" target="_blank">📤 깃허브에 새로 저장하기</a>
+      </div>
+    </div>
   </div>
 
   <footer>저장 위치: honawdo-2026/Year 저장소의 feedback 폴더</footer>
@@ -133,20 +158,20 @@
   var BRANCH = "main";
   var TODAY_ISO = "2026-08-22";
 
-  function buildFeedback(includeSnippet) {
+  // 주제별 "원본 내용 전체 + 내 의견"을 합친 마크다운을 만든다.
+  // (원본 전체를 깃허브 URL에 직접 실어 보내면 URL이 너무 길어져 깃허브가 오류를 내기 때문에,
+  //  여기서는 화면에 내용을 보여주고 사용자가 복사 → 붙여넣기로 저장하는 방식을 쓴다.)
+  function buildFeedback() {
     var lines = ["# " + TODAY_ISO + " 브리핑 피드백", ""];
     document.querySelectorAll(".card").forEach(function (card) {
       var label = card.querySelector(".card-label").textContent.trim();
       var input = card.querySelector("input[data-topic]");
       var opinion = input.value.trim();
+      var raw = card.querySelector(".content").textContent.trim().replace(/\s+/g, " ");
       lines.push("## " + label);
       lines.push("");
-      if (includeSnippet) {
-        var raw = card.querySelector(".content").textContent.trim().replace(/\s+/g, " ");
-        var snippet = raw.length > 50 ? raw.slice(0, 50) + "…" : raw;
-        lines.push("> " + snippet);
-        lines.push("");
-      }
+      lines.push(raw);
+      lines.push("");
       lines.push("**내 의견:** " + (opinion || "_(없음)_"));
       lines.push("");
     });
@@ -159,20 +184,31 @@
     var stamp = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
     var filename = "feedback/" + TODAY_ISO + "_" + stamp + ".md";
 
-    function makeUrl(content) {
-      return "https://github.com/" + REPO + "/new/" + BRANCH
-        + "?filename=" + encodeURIComponent(filename)
-        + "&value=" + encodeURIComponent(content);
-    }
+    document.getElementById("feedbackText").value = buildFeedback();
+    document.getElementById("saveResult").style.display = "block";
+    document.getElementById("uploadLink").href =
+      "https://github.com/" + REPO + "/new/" + BRANCH + "?filename=" + encodeURIComponent(filename);
+    document.getElementById("saveResult").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
 
-    // 평소엔 각 주제 내용 요약(50자)을 함께 저장해서 나중에 봐도 무슨 얘기였는지 알 수 있게 함.
-    // 의견을 아주 길게 썼을 때 등 URL이 너무 길어지면(6000자 초과) 깃허브가 오류를 내므로
-    // 그럴 땐 자동으로 요약 없이(의견만) 안전하게 저장하는 버전으로 대체.
-    var url = makeUrl(buildFeedback(true));
-    if (url.length > 6000) {
-      url = makeUrl(buildFeedback(false));
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    var ta = document.getElementById("feedbackText");
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, 999999);
+    var ok = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value);
+        ok = true;
+      }
+    } catch (e) {}
+    if (!ok) {
+      try { ok = document.execCommand("copy"); } catch (e) {}
     }
-    window.location.href = url;
+    var btn = this;
+    btn.textContent = ok ? "✅ 복사됨!" : "복사 실패 - 직접 선택해 복사해주세요";
+    setTimeout(function () { btn.textContent = "📋 복사하기"; }, 2000);
   });
 </script>
 </body>
