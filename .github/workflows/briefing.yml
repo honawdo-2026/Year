@@ -1,0 +1,40 @@
+name: Auto Briefing
+
+on:
+  schedule:
+    # UTC 기준. 07:00 KST(월/수/금) = 전날 22:00 UTC(일/화/목)
+    - cron: '0 22 * * 0,2,4'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate today's briefing (free public data, no API key needed)
+        run: python scripts/generate_briefing.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "briefing-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "변경 사항 없음 - 커밋 생략"
+          else
+            git commit -m "Auto briefing $(date -u +%Y-%m-%d)"
+            git push
+          fi
